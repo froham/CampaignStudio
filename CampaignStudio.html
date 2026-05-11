@@ -1,0 +1,2539 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>⚔ GAME OVER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --gold: #c9972a;
+  --gold2: #e8b84b;
+  --dark: #0a0605;
+  --dark2: #120a08;
+  --dark3: #1a0f0a;
+  --border: #4a2e12;
+  --border2: #6a3e18;
+  --red: #cc3322;
+  --red2: #e05040;
+  --purple: #7a3aaa;
+  --purple2: #c060ff;
+  --green: #2a7a3a;
+  --green2: #4ab84a;
+  --blue: #1a3a7a;
+  --blue2: #5090e0;
+  --text: #e8d5a0;
+  --text2: #b09060;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: var(--dark); overflow: hidden; font-family: 'Crimson Text', serif; color: var(--text); }
+
+/* CANVAS PARTICLES */
+#particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+.app { display: flex; flex-direction: column; width: 100vw; height: 100vh; position: relative; z-index: 1; }
+
+/* TOPNAV */
+.topnav {
+  display: flex; align-items: center; gap: 10px; padding: 6px 16px;
+  background: linear-gradient(180deg, #1a0a06 0%, #0d0603 100%);
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0; height: 42px;
+  box-shadow: 0 2px 20px rgba(200,80,20,.3);
+}
+.game-title {
+  font-family: 'Cinzel Decorative', serif; font-size: 16px;
+  color: var(--gold2); letter-spacing: 4px; margin-right: auto;
+  text-shadow: 0 0 20px rgba(200,150,40,.6), 0 0 40px rgba(200,80,20,.3);
+}
+.nav-btn {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px;
+  padding: 4px 14px; border-radius: 2px; cursor: pointer; border: 1px solid; transition: all .2s;
+  text-transform: uppercase;
+}
+.nav-btn.active {
+  background: linear-gradient(180deg, #e8b84b, #c9972a);
+  color: #1a0a06; border-color: #e8b84b;
+  box-shadow: 0 0 12px rgba(232,184,75,.4);
+}
+.nav-btn:not(.active) { background: transparent; color: var(--gold); border-color: var(--border2); }
+.nav-btn:not(.active):hover { background: rgba(200,150,40,.1); border-color: var(--gold); }
+.io-btn {
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px;
+  padding: 4px 10px; border-radius: 2px; cursor: pointer; border: 1px solid; transition: all .2s;
+}
+.io-export { background: rgba(42,122,58,.2); color: var(--green2); border-color: var(--green); }
+.io-export:hover { background: rgba(42,122,58,.4); }
+.io-import { background: rgba(26,58,122,.2); color: var(--blue2); border-color: var(--blue); }
+.io-import:hover { background: rgba(26,58,122,.4); }
+
+/* PLAY MODE */
+#playMode { display: flex; flex: 1; overflow: hidden; }
+
+/* SPLIT LAYOUT */
+.play-left {
+  width: 45%; position: relative; background: #000; overflow: hidden; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+}
+.play-left img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.play-left iframe, .play-left video { width: 100%; height: 100%; border: none; }
+.play-left .media-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 100px; background: radial-gradient(ellipse at center, #1a0a06 0%, #0a0603 100%); }
+.media-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 16px;
+  background: linear-gradient(transparent, rgba(10,6,3,.95));
+  display: flex; align-items: flex-end; justify-content: space-between;
+}
+.scene-title-play {
+  font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold2);
+  text-shadow: 0 0 20px rgba(200,150,40,.8), 0 2px 4px #000;
+}
+.scene-badge {
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px;
+  padding: 3px 10px; border-radius: 2px;
+}
+.badge-story { background: rgba(30,58,26,.8); color: var(--green2); border: 1px solid var(--green); }
+.badge-boss { background: rgba(58,14,14,.8); color: var(--red2); border: 1px solid var(--red); }
+.badge-choice { background: rgba(26,42,58,.8); color: var(--blue2); border: 1px solid var(--blue); }
+.badge-roll { background: rgba(42,26,58,.8); color: var(--purple2); border: 1px solid var(--purple); }
+.badge-medley { background: rgba(42,26,0,.8); color: #ffcc00; border: 1px solid #9a7a00; }
+.badge-quiz { background: rgba(58,26,42,.8); color: #ff80c0; border: 1px solid #8a2058; }
+.badge-wordsearch { background: rgba(26,42,42,.8); color: #40d0c0; border: 1px solid #207a70; }
+.badge-countdown { background: rgba(58,30,14,.8); color: #ff8040; border: 1px solid #8a3a10; }
+.badge-memory { background: rgba(50,20,60,.8); color: #d080ff; border: 1px solid #6030a0; }
+
+.media-top-controls {
+  position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 10;
+}
+.mc-btn {
+  background: rgba(10,6,3,.8); border: 1px solid var(--border2); color: var(--gold);
+  border-radius: 2px; padding: 4px 10px; cursor: pointer; font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 1px; transition: all .2s;
+}
+.mc-btn:hover { background: rgba(200,150,40,.2); border-color: var(--gold); }
+
+/* FULLSCREEN VIDEO */
+.video-fullscreen { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 500 !important; border-right: none !important; }
+.video-fullscreen .media-top-controls { top: 12px; right: 12px; }
+
+/* PLAY RIGHT */
+.play-right { flex: 1; display: flex; overflow: hidden; }
+.scene-text-col { flex: 1; padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.scene-text-col::-webkit-scrollbar { width: 4px; }
+.scene-text-col::-webkit-scrollbar-track { background: transparent; }
+.scene-text-col::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.scene-narration {
+  font-size: 15px; line-height: 1.8; color: var(--text); font-style: italic;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(18,10,8,.9), rgba(26,15,10,.9));
+  border-left: 3px solid var(--gold);
+  border-radius: 0 3px 3px 0;
+  box-shadow: inset 0 0 20px rgba(0,0,0,.3);
+  margin: auto 0;
+}
+.section-label {
+  font-family: 'Cinzel', serif; font-size: 9px; color: var(--text2);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+}
+.choice-btn {
+  width: 100%; text-align: left; padding: 10px 14px; margin-bottom: 6px;
+  background: linear-gradient(135deg, rgba(18,10,8,.95), rgba(26,15,10,.95));
+  border: 1px solid var(--border2); border-radius: 2px;
+  color: var(--text); font-family: 'Crimson Text', serif; font-size: 15px;
+  cursor: pointer; transition: all .25s; display: flex; align-items: center; gap: 10px;
+}
+.choice-btn:hover {
+  background: linear-gradient(135deg, rgba(200,150,40,.15), rgba(200,100,20,.1));
+  border-color: var(--gold); color: var(--gold2);
+  box-shadow: 0 0 12px rgba(200,150,40,.2);
+  transform: translateX(3px);
+}
+.choice-arrow { color: var(--gold); font-size: 12px; }
+
+/* ROLL BOX */
+.roll-box {
+  background: linear-gradient(135deg, rgba(10,6,3,.95), rgba(18,10,8,.95));
+  border: 1px solid var(--border2); border-radius: 3px; padding: 14px;
+  box-shadow: 0 0 20px rgba(0,0,0,.5);
+}
+.roll-box h4 { font-family: 'Cinzel', serif; font-size: 10px; color: var(--text2); letter-spacing: 1px; margin-bottom: 10px; }
+.roll-row { display: flex; gap: 10px; align-items: center; }
+.die-input {
+  width: 60px; padding: 6px; background: rgba(10,6,3,.8);
+  border: 1px solid var(--border2); border-radius: 2px;
+  color: var(--gold2); font-family: 'Cinzel', serif; font-size: 22px; text-align: center;
+  box-shadow: inset 0 0 10px rgba(0,0,0,.5);
+}
+.roll-sym { color: var(--gold); font-size: 20px; }
+.roll-total-val { font-family: 'Cinzel Decorative', serif; font-size: 28px; color: var(--gold2); min-width: 40px; text-align: center; text-shadow: 0 0 15px rgba(200,150,40,.6); }
+.roll-result { font-family: 'Cinzel', serif; font-size: 11px; text-align: center; margin-top: 10px; padding: 6px 12px; border-radius: 2px; letter-spacing: 1px; display: none; }
+.r-hit { background: rgba(26,58,26,.8); color: var(--green2); border: 1px solid var(--green); }
+.r-miss { background: rgba(58,26,26,.8); color: var(--red2); border: 1px solid var(--red); }
+.r-crit { background: rgba(42,26,58,.8); color: var(--purple2); border: 1px solid var(--purple); box-shadow: 0 0 20px rgba(192,96,255,.3); }
+.apply-btn {
+  width: 100%; margin-top: 10px; padding: 9px;
+  background: linear-gradient(180deg, #e8b84b, #c9972a);
+  color: #1a0a06; border: none; border-radius: 2px;
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; cursor: pointer;
+  transition: all .2s; box-shadow: 0 0 15px rgba(200,150,40,.3);
+}
+.apply-btn:hover { box-shadow: 0 0 25px rgba(200,150,40,.5); transform: translateY(-1px); }
+
+/* BOSS PANEL */
+.boss-panel {
+  background: linear-gradient(135deg, rgba(18,6,6,.98), rgba(26,10,8,.98));
+  border: 1px solid var(--red); border-radius: 3px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 30px rgba(200,50,30,.2), inset 0 0 30px rgba(0,0,0,.4);
+}
+.boss-name-play {
+  font-family: 'Cinzel Decorative', serif; font-size: 18px; color: var(--red2);
+  text-align: center; letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(220,80,60,.6), 0 0 40px rgba(200,40,20,.3);
+}
+.boss-emoji-play { text-align: center; font-size: 52px; }
+.hp-sec h4 { font-family: 'Cinzel', serif; font-size: 9px; color: var(--text2); letter-spacing: 1px; margin-bottom: 4px; }
+.hp-wrap { background: rgba(10,6,3,.8); border: 1px solid var(--border2); border-radius: 2px; height: 18px; overflow: hidden; }
+.hp-bar { height: 100%; transition: width .5s; border-radius: 1px; }
+.hp-party { background: linear-gradient(90deg, #1a6a1a, #4ab84a); box-shadow: 0 0 10px rgba(74,184,74,.4); }
+.hp-boss { background: linear-gradient(90deg, #6a1a1a, #e04040); box-shadow: 0 0 10px rgba(224,64,64,.4); }
+.hp-lbl { font-family: 'Cinzel', serif; font-size: 12px; color: var(--text); text-align: right; margin-top: 2px; }
+.boss-actions { display: flex; gap: 6px; }
+.ba-btn {
+  flex: 1; padding: 9px 4px; border-radius: 2px; border: none;
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px; cursor: pointer; transition: all .2s;
+}
+.ba-btn:hover { transform: translateY(-1px); }
+.ba-boss { background: linear-gradient(180deg, #8a2020, #6a1a1a); color: var(--text); box-shadow: 0 0 10px rgba(200,40,20,.2); }
+.ba-party { background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1a0a06; box-shadow: 0 0 10px rgba(200,150,40,.2); }
+.ba-heal { background: linear-gradient(180deg, #2a6a2a, #1a4a1a); color: var(--text); width: 100%; box-shadow: 0 0 10px rgba(40,150,40,.2); }
+
+/* QUIZ */
+.quiz-panel {
+  background: linear-gradient(135deg, rgba(14,8,20,.98), rgba(20,10,28,.98));
+  border: 1px solid #8a2058; border-radius: 3px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 30px rgba(130,32,88,.2);
+}
+.quiz-q-num { font-family: 'Cinzel', serif; font-size: 10px; color: #ff80c0; letter-spacing: 2px; text-align: center; }
+.quiz-question {
+  font-family: 'Cinzel', serif; font-size: 16px; color: var(--text);
+  text-align: center; padding: 14px; line-height: 1.5;
+  background: rgba(10,6,3,.5); border-radius: 2px; border: 1px solid rgba(138,32,88,.3);
+}
+.quiz-score-row { display: flex; justify-content: center; gap: 20px; }
+.quiz-score { font-family: 'Cinzel', serif; font-size: 22px; color: #ff80c0; text-align: center; }
+.quiz-score span { font-size: 10px; color: var(--text2); display: block; letter-spacing: 1px; }
+.quiz-actions { display: flex; gap: 8px; }
+.qz-btn {
+  flex: 1; padding: 10px; border-radius: 2px; border: none;
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .2s;
+}
+.qz-correct { background: linear-gradient(180deg, #2a7a3a, #1a5a2a); color: var(--text); }
+.qz-wrong { background: linear-gradient(180deg, #7a2020, #5a1818); color: var(--text); }
+.qz-next { background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1a0a06; }
+.qz-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.quiz-result { font-family: 'Cinzel', serif; font-size: 14px; text-align: center; padding: 10px; border-radius: 2px; display: none; letter-spacing: 1px; }
+
+/* COUNTDOWN */
+.countdown-panel {
+  background: linear-gradient(135deg, rgba(20,10,6,.98), rgba(28,14,8,.98));
+  border: 1px solid #8a3a10; border-radius: 3px; padding: 20px;
+  display: flex; flex-direction: column; gap: 14px; align-items: center;
+  box-shadow: 0 0 40px rgba(200,80,20,.2);
+}
+.countdown-label { font-family: 'Cinzel', serif; font-size: 11px; color: #ff8040; letter-spacing: 3px; }
+.countdown-display {
+  font-family: 'Cinzel Decorative', serif; font-size: 72px; color: #ff8040;
+  text-shadow: 0 0 30px rgba(255,128,64,.6), 0 0 60px rgba(255,64,20,.3);
+  line-height: 1; min-width: 160px; text-align: center;
+  transition: color .3s;
+}
+.countdown-display.urgent { color: var(--red2); text-shadow: 0 0 30px rgba(224,80,64,.8), 0 0 60px rgba(200,40,20,.5); animation: urgentPulse .5s infinite alternate; }
+@keyframes urgentPulse { to { transform: scale(1.05); } }
+.countdown-start-btn {
+  padding: 12px 32px; border-radius: 2px; border: 1px solid #8a3a10;
+  background: linear-gradient(180deg, #c05020, #8a3010);
+  color: var(--text); font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2px; cursor: pointer;
+  transition: all .2s; box-shadow: 0 0 20px rgba(200,80,20,.3);
+}
+.countdown-start-btn:hover { box-shadow: 0 0 30px rgba(200,80,20,.5); transform: translateY(-1px); }
+.countdown-actions { display: flex; gap: 8px; }
+.cd-btn {
+  padding: 8px 16px; border-radius: 2px; border: 1px solid var(--border2);
+  background: rgba(10,6,3,.8); color: var(--text2);
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px; cursor: pointer;
+  transition: all .2s;
+}
+.cd-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* WORD SEARCH */
+.wordsearch-panel {
+  background: linear-gradient(135deg, rgba(6,14,14,.98), rgba(8,20,18,.98));
+  border: 1px solid #207a70; border-radius: 3px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 30px rgba(32,122,112,.15);
+}
+.ws-title { font-family: 'Cinzel', serif; font-size: 14px; color: #40d0c0; text-align: center; letter-spacing: 2px; }
+.ws-grid-wrap { display: flex; justify-content: center; overflow: auto; }
+.ws-grid { display: inline-grid; gap: 2px; }
+.ws-cell {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--text);
+  background: rgba(10,6,3,.6); border: 1px solid rgba(32,122,112,.3); border-radius: 2px;
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.ws-cell:hover { background: rgba(32,122,112,.2); border-color: #40d0c0; }
+.ws-cell.selected { background: rgba(64,208,192,.2); border-color: #40d0c0; color: #40d0c0; }
+.ws-cell.found { background: rgba(74,184,74,.2); border-color: var(--green2); color: var(--green2); cursor: default; }
+.ws-words { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ws-word {
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px;
+  padding: 3px 10px; border-radius: 2px;
+  background: rgba(32,122,112,.2); border: 1px solid #207a70; color: #40d0c0;
+}
+.ws-word.found { background: rgba(74,184,74,.2); border-color: var(--green2); color: var(--green2); text-decoration: line-through; }
+.ws-secret { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold2); text-align: center; padding: 10px; background: rgba(200,150,40,.1); border: 1px solid var(--gold); border-radius: 2px; display: none; letter-spacing: 2px; }
+.ws-progress { font-family: 'Cinzel', serif; font-size: 10px; color: var(--text2); text-align: center; letter-spacing: 1px; }
+
+/* MEMORY GAME */
+.memory-panel {
+  background: linear-gradient(135deg, rgba(12,8,18,.98), rgba(18,10,26,.98));
+  border: 1px solid #6030a0; border-radius: 3px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 30px rgba(96,48,160,.2);
+}
+.memory-title { font-family: 'Cinzel', serif; font-size: 14px; color: #d080ff; text-align: center; letter-spacing: 2px; }
+.memory-phase { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); text-align: center; letter-spacing: 1px; }
+.memory-timer-display {
+  font-family: 'Cinzel Decorative', serif; font-size: 48px; color: #d080ff;
+  text-align: center; text-shadow: 0 0 20px rgba(208,128,255,.5);
+}
+.memory-icons-show { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 10px; }
+.mem-icon-show { font-size: 36px; }
+.memory-grid { display: grid; gap: 6px; }
+.mem-cell {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 24px; background: rgba(10,6,3,.7); border: 1px solid rgba(96,48,160,.4);
+  border-radius: 3px; cursor: pointer; transition: all .2s; user-select: none;
+}
+.mem-cell:hover { background: rgba(96,48,160,.2); border-color: #d080ff; }
+.mem-cell.correct { background: rgba(74,184,74,.2); border-color: var(--green2); cursor: default; }
+.mem-cell.wrong { background: rgba(200,50,50,.3); border-color: var(--red2); animation: shake .3s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+.mem-score { font-family: 'Cinzel', serif; font-size: 13px; color: #d080ff; text-align: center; letter-spacing: 1px; }
+.mem-start-btn {
+  padding: 10px; border-radius: 2px; border: 1px solid #6030a0;
+  background: linear-gradient(180deg, #8040c0, #6030a0);
+  color: var(--text); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; cursor: pointer;
+}
+
+/* SUPERMEDLEY */
+.medley-panel {
+  background: linear-gradient(135deg, rgba(14,10,4,.98), rgba(20,14,6,.98));
+  border: 1px solid #9a7a00; border-radius: 3px; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 0 30px rgba(154,122,0,.2);
+}
+.medley-title { font-family: 'Cinzel Decorative', serif; font-size: 16px; color: #ffcc00; text-align: center; letter-spacing: 3px; text-shadow: 0 0 20px rgba(255,204,0,.5); }
+.medley-score-row { display: flex; justify-content: center; gap: 24px; }
+.medley-score { font-family: 'Cinzel', serif; font-size: 28px; color: #ffcc00; text-align: center; }
+.medley-score span { font-size: 10px; color: var(--text2); display: block; letter-spacing: 1px; }
+.medley-threshold { font-size: 12px; color: var(--text2); text-align: center; font-style: italic; }
+.medley-progress { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.song-dot {
+  width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border2);
+  background: rgba(10,6,3,.8); display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-family: 'Cinzel', serif; transition: all .2s;
+}
+.song-dot.correct { background: rgba(26,74,26,.8); border-color: var(--green2); color: var(--green2); }
+.song-dot.wrong { background: rgba(58,14,14,.8); border-color: var(--red2); color: var(--red2); }
+.song-dot.playing { background: rgba(42,26,0,.8); border-color: #ffcc00; color: #ffcc00; animation: glow .6s infinite alternate; }
+@keyframes glow { to { transform: scale(1.2); box-shadow: 0 0 10px #ffcc00; } }
+.medley-song-info { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); text-align: center; min-height: 18px; letter-spacing: 1px; }
+.medley-btns { display: flex; gap: 6px; }
+.med-btn {
+  flex: 1; padding: 9px 4px; border-radius: 2px; border: none;
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px; cursor: pointer; transition: all .2s;
+}
+.med-btn:hover { transform: translateY(-1px); }
+.med-play { background: linear-gradient(180deg, #3a2a00, #2a1a00); border: 1px solid #9a7a00; color: #ffcc00; }
+.med-correct { background: linear-gradient(180deg, #2a7a3a, #1a5a2a); color: var(--text); }
+.med-wrong { background: linear-gradient(180deg, #7a2020, #5a1818); color: var(--text); }
+.med-skip { background: rgba(26,26,42,.8); color: var(--blue2); border: 1px solid var(--blue); }
+.medley-result { font-family: 'Cinzel', serif; font-size: 16px; text-align: center; padding: 12px; border-radius: 2px; display: none; letter-spacing: 1px; margin-top: 4px; }
+.med-win { background: rgba(26,58,26,.8); color: var(--green2); border: 1px solid var(--green); }
+.med-lose { background: rgba(58,14,14,.8); color: var(--red2); border: 1px solid var(--red); }
+
+/* SIDEBAR */
+.play-sidebar {
+  width: 170px; background: linear-gradient(180deg, #0d0806, #0a0603);
+  border-left: 1px solid var(--border);
+  padding: 12px; display: flex; flex-direction: column; gap: 12px;
+  overflow-y: auto; flex-shrink: 0;
+}
+.play-sidebar::-webkit-scrollbar { width: 3px; }
+.play-sidebar::-webkit-scrollbar-thumb { background: var(--border2); }
+.sb-sec h4 { font-family: 'Cinzel', serif; font-size: 9px; color: var(--text2); letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+.live-row { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
+.live-row label { font-size: 11px; color: var(--text2); flex: 1; }
+.adj-btn {
+  background: rgba(10,6,3,.8); border: 1px solid var(--border2); color: var(--gold);
+  border-radius: 2px; width: 22px; height: 22px; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .15s;
+}
+.adj-btn:hover { background: rgba(200,150,40,.15); border-color: var(--gold); }
+.adj-val { font-family: 'Cinzel', serif; font-size: 14px; color: var(--text); min-width: 32px; text-align: center; }
+.eliksir-btn {
+  width: 100%; padding: 7px; background: linear-gradient(180deg, rgba(26,58,26,.8), rgba(18,42,18,.8));
+  border: 1px solid var(--green); color: var(--green2); border-radius: 2px;
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .2s;
+}
+.eliksir-btn:hover { background: linear-gradient(180deg, rgba(42,90,42,.8), rgba(26,60,26,.8)); box-shadow: 0 0 12px rgba(74,184,74,.2); }
+.hint-popup { display: none; background: rgba(26,58,26,.8); border: 1px solid var(--green); border-radius: 2px; padding: 8px; font-size: 12px; color: var(--green2); font-style: italic; line-height: 1.5; margin-top: 6px; }
+.reset-btn {
+  width: 100%; padding: 6px; background: rgba(42,26,58,.6); border: 1px solid var(--purple);
+  color: var(--purple2); border-radius: 2px; font-family: 'Cinzel', serif;
+  font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all .2s;
+}
+.reset-btn:hover { box-shadow: 0 0 12px rgba(192,96,255,.2); }
+
+/* Quick timer */
+.quick-timer-display {
+  font-family:'Cinzel Decorative',serif; font-size:42px; color:#ff8040;
+  text-align:center; text-shadow:0 0 20px rgba(255,128,64,.5);
+  line-height:1; cursor:pointer; transition:all .2s;
+}
+.quick-timer-display:hover { transform:scale(1.05); }
+.quick-timer-display.urgent { color:var(--red2); text-shadow:0 0 20px rgba(224,80,64,.8); animation:urgentPulse .5s infinite alternate; }
+.quick-timer-display.idle { color:#5a3e1b; font-size:32px; }
+.qt-row { display:flex; gap:4px; margin-top:6px; }
+.qt-btn { flex:1; padding:5px 2px; border-radius:2px; border:1px solid var(--border2); background:rgba(10,6,3,.8); color:var(--text2); font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px; cursor:pointer; transition:all .2s; }
+.qt-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+/* Death button */
+.death-btn { width:100%; padding:9px; background:linear-gradient(180deg,#6a1a1a,#4a0e0e); border:1px solid #aa2020; color:#ff6060; border-radius:3px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px; cursor:pointer; transition:all .2s; }
+.death-btn:hover { background:linear-gradient(180deg,#8a2020,#6a1a1a); box-shadow:0 0 20px rgba(200,40,20,.4); }
+
+/* Quiz hint */
+.quiz-hint-btn { width:100%; padding:6px; background:rgba(26,58,26,.6); border:1px solid var(--green); color:var(--green2); border-radius:3px; font-family:'Cinzel',serif; font-size:10px; letter-spacing:1px; cursor:pointer; margin-top:6px; }
+.quiz-hint-text { display:none; background:rgba(26,58,26,.4); border:1px solid var(--green); border-radius:3px; padding:8px; font-size:13px; color:var(--green2); font-style:italic; line-height:1.5; margin-top:4px; text-align:center; }
+.round-num { font-family: 'Cinzel Decorative', serif; font-size: 24px; color: var(--gold2); text-align: center; text-shadow: 0 0 15px rgba(200,150,40,.4); }
+
+/* SCREEN FLASH */
+.screen-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 900; opacity: 0; transition: opacity .1s; }
+.screen-flash.red { background: rgba(200,40,20,.3); }
+.screen-flash.green { background: rgba(40,200,80,.2); }
+.screen-flash.show { opacity: 1; }
+
+/* NOTIF */
+.notif {
+  position: fixed; top: 52px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(26,15,10,.98), rgba(18,10,8,.98));
+  border: 1px solid var(--gold); padding: 10px 24px; border-radius: 2px;
+  font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold2);
+  z-index: 1000; opacity: 0; transition: opacity .3s; pointer-events: none;
+  text-align: center; white-space: nowrap;
+  box-shadow: 0 0 20px rgba(200,150,40,.3);
+}
+.notif.show { opacity: 1; }
+
+/* SCENE TRANSITION */
+.scene-transition {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(ellipse at center, rgba(200,80,20,.6), rgba(10,6,3,1));
+  pointer-events: none; z-index: 800; opacity: 0;
+}
+.scene-transition.active { animation: fadeInOut .6s ease-out; }
+@keyframes fadeInOut { 0%{opacity:0} 40%{opacity:1} 100%{opacity:0} }
+
+/* EDIT MODE */
+#editMode { display: none; flex: 1; overflow: hidden; }
+.edit-layout { display: flex; height: 100%; }
+.scene-list { width: 200px; background: linear-gradient(180deg, #0d0806, #0a0603); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+.sl-header { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.sl-header span { font-family: 'Cinzel', serif; font-size: 9px; color: var(--text2); letter-spacing: 2px; }
+.add-scene-btn { background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1a0a06; border: none; border-radius: 2px; padding: 4px 10px; font-family: 'Cinzel', serif; font-size: 10px; cursor: pointer; }
+.sl-items { flex: 1; overflow-y: auto; }
+.sl-item { padding: 7px 12px; cursor: pointer; border-bottom: 1px solid rgba(74,46,18,.3); transition: background .15s; display:flex; align-items:center; gap:6px; }
+.sl-item:hover { background: rgba(200,150,40,.05); }
+.sl-item.sel { background: rgba(200,150,40,.1); border-left: 2px solid var(--gold); }
+.sl-item-info { flex:1; min-width:0; }
+.sl-item-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sl-item-type { font-size: 10px; color: var(--text2); margin-top: 2px; }
+.sl-item-btns { display:flex; gap:2px; flex-shrink:0; opacity:0; transition:opacity .15s; }
+.sl-item:hover .sl-item-btns { opacity:1; }
+.sl-ibtn { background:rgba(10,6,3,.8); border:1px solid var(--border); color:var(--text2); border-radius:2px; padding:2px 5px; cursor:pointer; font-size:11px; line-height:1; transition:all .15s; }
+.sl-ibtn:hover { border-color:var(--gold); color:var(--gold); }
+.edit-panel { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.edit-panel::-webkit-scrollbar { width: 4px; }
+.edit-panel::-webkit-scrollbar-thumb { background: var(--border2); }
+.es { background: linear-gradient(135deg, rgba(18,10,8,.95), rgba(14,8,6,.95)); border: 1px solid var(--border2); border-radius: 3px; padding: 14px; }
+.es h3 { font-family: 'Cinzel', serif; font-size: 9px; color: var(--text2); letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase; }
+.fr { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.fr label { font-family: 'Cinzel', serif; font-size: 9px; color: var(--text2); letter-spacing: 1px; }
+.fi, .fs, .ft {
+  background: rgba(10,6,3,.8); border: 1px solid var(--border2); border-radius: 2px;
+  color: var(--text); font-family: 'Crimson Text', serif; font-size: 14px; padding: 7px 9px; width: 100%;
+  transition: border-color .2s;
+}
+.fi:focus, .fs:focus, .ft:focus { outline: none; border-color: var(--gold); }
+.ft { resize: vertical; min-height: 60px; }
+.fs option { background: #1a0a06; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ce-row { display: flex; gap: 6px; align-items: center; background: rgba(10,6,3,.6); border: 1px solid var(--border); border-radius: 2px; padding: 7px; margin-bottom: 6px; }
+.ce-row .fi { flex: 1; }
+.del-btn { background: rgba(58,14,14,.8); border: none; color: var(--red2); border-radius: 2px; padding: 4px 8px; cursor: pointer; font-size: 12px; flex-shrink: 0; transition: all .15s; }
+.del-btn:hover { background: rgba(90,20,20,.9); }
+.add-choice-btn { background: transparent; border: 1px dashed var(--border2); color: var(--text2); border-radius: 2px; padding: 6px; font-family: 'Cinzel', serif; font-size: 9px; cursor: pointer; letter-spacing: 1px; width: 100%; margin-top: 4px; transition: all .2s; }
+.add-choice-btn:hover { border-color: var(--gold); color: var(--gold); }
+.song-row { display: grid; grid-template-columns: 26px 1fr 2fr 60px 70px 28px; gap: 5px; align-items: center; background: rgba(10,6,3,.6); border: 1px solid var(--border); border-radius: 2px; padding: 6px; margin-bottom: 6px; }
+.song-num { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); text-align: center; }
+.col-hdr { font-family: 'Cinzel', serif; font-size: 8px; color: rgba(74,46,18,.8); letter-spacing: 1px; text-align: center; }
+.quiz-q-row { display: grid; grid-template-columns: 1fr 80px 80px 28px; gap: 5px; align-items: center; background: rgba(10,6,3,.6); border: 1px solid var(--border); border-radius: 2px; padding: 7px; margin-bottom: 6px; }
+.edit-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.del-scene-btn { background: rgba(58,14,14,.8); color: var(--red2); border: 1px solid var(--red); border-radius: 2px; padding: 7px 14px; font-family: 'Cinzel', serif; font-size: 10px; cursor: pointer; letter-spacing: 1px; }
+.set-start-btn { background: transparent; border: 1px solid var(--border2); color: var(--text2); border-radius: 2px; padding: 5px 12px; font-family: 'Cinzel', serif; font-size: 9px; cursor: pointer; letter-spacing: 1px; transition: all .2s; }
+.set-start-btn.is-start { border-color: var(--gold); color: var(--gold); }
+.preview-btn { background: linear-gradient(180deg, var(--gold2), var(--gold)); color: #1a0a06; border: none; border-radius: 2px; padding: 5px 14px; font-family: 'Cinzel', serif; font-size: 9px; cursor: pointer; letter-spacing: 1px; }
+.no-sel { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; color: var(--border2); height: 100%; }
+.no-sel .big { font-size: 52px; }
+.no-sel p { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2px; }
+.hint-note { font-size: 11px; color: var(--text2); font-style: italic; margin-top: 4px; opacity: .7; }
+.ws-word-row { display: flex; gap: 6px; align-items: center; background: rgba(10,6,3,.6); border: 1px solid var(--border); border-radius: 2px; padding: 7px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div class="screen-flash" id="screenFlash"></div>
+<div class="scene-transition" id="sceneTransition"></div>
+
+<div class="app">
+  <div class="topnav">
+    <div class="game-title">⚔ GAME OVER <span id="copyrightYear" style="font-size:8px;opacity:.35;letter-spacing:1px;font-family:'Cinzel',serif;font-weight:400"></span></div>
+    <button class="nav-btn active" id="btnPlay" onclick="startGame()">SPILL</button>
+    <button class="nav-btn" id="btnEdit" onclick="switchMode('edit')">REDIGER</button>
+    <button class="nav-btn" id="btnUpdate" onclick="updatePlay()" style="background:rgba(80,160,80,.15);border-color:#4ab84a;color:#4ab84a">OPPDATER</button>
+    <button class="nav-btn" id="btnRestart" onclick="restartGame()" style="display:none;background:rgba(200,150,40,.15);border-color:var(--gold2);color:var(--gold2)">↺ RESTART</button>
+    <button class="nav-btn" id="btnBack" onclick="goBack()" style="display:none;background:rgba(26,42,58,.8);border-color:#2a4a7a;color:#5090d0">◀ TILBAKE</button>
+    <span id="sceneIndicator" style="font-family:'Cinzel',serif;font-size:10px;color:#5a3e1b;letter-spacing:1px;padding:0 8px"></span>
+    <div id="devTools" style="display:flex;gap:6px;margin-left:auto;align-items:center">
+      <span id="saveIndicator" style="font-family:monospace;font-size:10px;color:#4ab84a;opacity:0;transition:opacity .4s;white-space:nowrap"></span>
+      <button class="io-btn" onclick="openCampaignManager()" style="background:rgba(150,100,200,.2);color:#c080ff;border-color:#7a40aa">📁 KAMPANJER</button>
+      <button class="io-btn io-export" onclick="exportJSON()">EKSPORTER JSON</button>
+      <button class="io-btn" onclick="exportZip()" style="background:rgba(42,80,122,.2);color:#80c0ff;border-color:#2a507a">📦 EKSPORTER ZIP</button>
+      <button class="io-btn io-import" onclick="document.getElementById('importFile').click()">IMPORTER</button>
+      <button class="io-btn" onclick="clearSave()" style="background:rgba(58,14,14,.4);color:#e05050;border-color:#7a2020">NULLSTILL LAGRING</button>
+    </div>
+    <button class="nav-btn" id="btnDevMode" onclick="toggleDevMode()" style="border-color:#5a3a8a;color:#c060ff;font-size:9px;margin-left:6px">🎮 SPILLMODUS</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+  </div>
+  <div class="notif" id="notif"></div>
+  <div id="dbgBar" style="position:fixed;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,80,0,.85);color:#0f0;font-family:monospace;font-size:11px;padding:4px 14px;border-radius:3px;z-index:2000;opacity:0;transition:opacity .3s;pointer-events:none"></div>
+
+  <!-- CAMPAIGN MANAGER MODAL -->
+  <div id="campaignModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:linear-gradient(135deg,#1a0f0a,#120a06);border:1px solid var(--border2);border-radius:6px;padding:24px;min-width:400px;max-width:560px;max-height:80vh;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:'Cinzel Decorative',serif;font-size:14px;color:var(--gold2);letter-spacing:2px">📁 KAMPANJER</span>
+        <button onclick="closeCampaignManager()" style="background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer">✕</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="newCampaignName" class="fi" placeholder="Navn på ny kampanje..." style="flex:1">
+        <button onclick="createNewCampaign()" style="background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a0a06;border:none;border-radius:2px;padding:8px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;cursor:pointer;white-space:nowrap">+ NY</button>
+      </div>
+      <div id="campaignList" style="overflow-y:auto;display:flex;flex-direction:column;gap:6px;max-height:50vh"></div>
+      <div id="legacyRestore" style="display:none;padding:10px;background:rgba(200,150,40,.1);border:1px solid var(--gold);border-radius:3px;font-family:'Cinzel',serif;font-size:10px;color:var(--gold2);text-align:center">
+        💾 Gammel kampanje funnet som backup!
+        <button onclick="restoreLegacy()" style="display:block;width:100%;margin-top:8px;padding:7px;background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a0a06;border:none;border-radius:2px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px">GJENOPPRETT GAMMEL KAMPANJE</button>
+      </div>
+      <div style="font-family:monospace;font-size:10px;color:#3a2a10;text-align:center">
+        ⚔ Game Over Campaign Engine &copy; <span class="copyrightYearInline"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAY MODE -->
+  <div id="playMode">
+    <div class="play-left" id="playLeft">
+      <div class="media-placeholder" id="playEmoji">🏰</div>
+      <div class="media-overlay">
+        <div class="scene-title-play" id="playTitle">Klar til eventyr</div>
+        <div class="scene-badge badge-story" id="playBadge">SCENE</div>
+      </div>
+      <div class="media-top-controls" id="mediaTopControls">
+        <button class="mc-btn" onclick="toggleFullscreenVideo()" id="fsBtn">⛶ FULLSKJERM</button>
+      </div>
+    </div>
+
+    <div class="play-right">
+      <div class="scene-text-col">
+        <!-- playText shown here only for story/choice, moved below widgets for others -->
+        <div class="scene-narration" id="playText" style="display:none"></div>
+
+        <div id="storyChoices" style="display:none">
+          <div class="section-label">HVA GJØR LAGET?</div>
+          <div id="choicesBtns" style="margin-top:6px"></div>
+        </div>
+
+        <!-- ROLL -->
+        <div id="rollSection" style="display:none">
+          <div class="roll-box">
+            <h4>TERNINGKAST — 2 × D20</h4>
+            <div class="roll-row">
+              <input class="die-input" type="number" id="die1" min="1" max="20" value="10" oninput="calcRoll()">
+              <span class="roll-sym">+</span>
+              <input class="die-input" type="number" id="die2" min="1" max="20" value="10" oninput="calcRoll()">
+              <span class="roll-sym">=</span>
+              <span class="roll-total-val" id="rollTotal">20</span>
+            </div>
+            <div class="roll-result" id="rollResultText"></div>
+            <button class="apply-btn" onclick="applyRoll()">BRUK KAST</button>
+          </div>
+          <div id="rollChoices" style="margin-top:8px"></div>
+        </div>
+
+        <!-- BOSS -->
+        <div id="bossSection" style="display:none">
+          <div class="boss-panel">
+            <div class="boss-emoji-play" id="bossEmoji">👹</div>
+            <div class="boss-name-play" id="bossNamePlay">BOSSEN</div>
+            <div class="hp-sec">
+              <h4>BOSS HP</h4>
+              <div class="hp-wrap"><div class="hp-bar hp-boss" id="bossHpBar" style="width:100%"></div></div>
+              <div class="hp-lbl"><span id="bossHpNow">100</span> / <span id="bossHpMax">100</span></div>
+            </div>
+            <div class="roll-box">
+              <h4>KAST (2 × D20)</h4>
+              <div class="roll-row">
+                <input class="die-input" type="number" id="bDie1" min="1" max="20" value="10" oninput="calcBossRoll()">
+                <span class="roll-sym">+</span>
+                <input class="die-input" type="number" id="bDie2" min="1" max="20" value="10" oninput="calcBossRoll()">
+                <span class="roll-sym">=</span>
+                <span class="roll-total-val" id="bRollTotal">20</span>
+              </div>
+              <div class="roll-result" id="bRollText"></div>
+              <div class="boss-actions" style="margin-top:8px">
+                <button class="ba-btn ba-boss" onclick="bossAttack()">BOSS ANGRIPER</button>
+                <button class="ba-btn ba-party" onclick="partyAttack()">LAGET ANGRIPER</button>
+              </div>
+            </div>
+            <div id="bossDoneSection" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- QUIZ -->
+        <div id="quizSection" style="display:none">
+          <div class="quiz-panel">
+            <div class="quiz-q-num" id="quizQNum">SPØRSMÅL 1 / 10</div>
+            <div class="quiz-question" id="quizQuestion">Laster spørsmål...</div>
+            <div class="quiz-score-row">
+              <div class="quiz-score" id="quizCorrect">0<span>RIKTIGE</span></div>
+              <div class="quiz-score" id="quizWrong">0<span>FEIL</span></div>
+            </div>
+            <div class="quiz-actions">
+              <button class="qz-btn qz-correct" onclick="quizMark(true)">✓ RIKTIG</button>
+              <button class="qz-btn qz-wrong" onclick="quizMark(false)">✗ FEIL</button>
+              <button class="qz-btn qz-next" onclick="quizNext()">NESTE ▶</button>
+            </div>
+            <button class="quiz-hint-btn" id="quizHintBtn" style="display:none" onclick="toggleQuizHint()">🧪 VIS HINT</button>
+            <div class="quiz-hint-text" id="quizHintText"></div>
+            <div class="quiz-result" id="quizResult"></div>
+            <div id="quizDoneSection" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- COUNTDOWN -->
+        <div id="countdownSection" style="display:none">
+          <div class="countdown-panel">
+            <div class="countdown-label">⏱ NEDTELLING</div>
+            <div class="countdown-display" id="countdownDisplay">60</div>
+            <button class="countdown-start-btn" id="cdStartBtn" onclick="countdownStart()">▶ START NEDTELLING</button>
+            <div class="countdown-actions">
+              <button class="cd-btn" onclick="countdownPause()" id="cdPauseBtn" style="display:none">⏸ PAUSE</button>
+              <button class="cd-btn" onclick="countdownReset()">↺ RESET</button>
+            </div>
+            <div id="countdownDoneSection" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- WORD SEARCH -->
+        <div id="wordsearchSection" style="display:none">
+          <div class="wordsearch-panel">
+            <div class="ws-title">🔤 BOKSTAVBRETT</div>
+            <div class="ws-words" id="wsWordList"></div>
+            <div class="ws-progress" id="wsProgress">Finn ordene!</div>
+            <div class="ws-grid-wrap"><div class="ws-grid" id="wsGrid"></div></div>
+            <div class="ws-secret" id="wsSecret"></div>
+            <div id="wsDoneSection" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- MEMORY -->
+        <div id="memorySection" style="display:none">
+          <div class="memory-panel">
+            <div class="memory-title">🧠 HUSKELISTE</div>
+            <div class="memory-phase" id="memPhase">Klar til start</div>
+            <div class="memory-timer-display" id="memTimer" style="display:none">5</div>
+            <div class="memory-icons-show" id="memShowIcons" style="display:none"></div>
+            <div class="mem-score" id="memScore" style="display:none"></div>
+            <div class="memory-grid" id="memGrid" style="display:none"></div>
+            <button class="mem-start-btn" id="memStartBtn" onclick="memoryStart()">▶ VIS IKONER</button>
+            <div id="memDoneSection" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- MEDLEY -->
+        <div id="medleySection" style="display:none">
+          <div class="medley-panel">
+            <div class="medley-score-row">
+              <div class="medley-score" id="medScore">0<span>RIKTIGE</span></div>
+              <div style="font-family:'Cinzel',serif;font-size:22px;color:var(--border2);align-self:center">/</div>
+              <div class="medley-score" id="medTotal">0<span>SPILT</span></div>
+            </div>
+            <div class="medley-threshold" id="medThreshText"></div>
+            <div class="medley-progress" id="medProgress"></div>
+            <div class="medley-song-info" id="medSongInfo">Klar — trykk SPILL NESTE</div>
+            <div class="medley-btns">
+              <button class="med-btn med-play" id="medPlayBtn" onclick="medleyPlayNext()">▶ SPILL NESTE</button>
+              <button class="med-btn med-correct" onclick="medleyMark(true)">✓ RIKTIG</button>
+              <button class="med-btn med-wrong" onclick="medleyMark(false)">✗ FEIL</button>
+              <button class="med-btn med-skip" onclick="medleySkip()">HOPP</button>
+            </div>
+            <button class="med-btn" style="background:rgba(10,6,3,.8);border:1px solid var(--border2);color:#5090d0" onclick="medleyReplayCurrent()">↺ SPILL AV IGJEN</button>
+            <button class="quiz-hint-btn" id="medleyHintBtn" style="display:none" onclick="toggleMedleyHint()">🧪 VIS HINT</button>
+            <div class="quiz-hint-text" id="medleyHintText"></div>
+            <div class="medley-result" id="medResult"></div>
+            <div id="medleyDoneSection" style="display:none"></div>
+          </div>
+        </div>
+        <!-- Narration text shown BELOW widgets for non-story scenes -->
+        <div class="scene-narration" id="playTextBelow" style="display:none;text-align:center;border-left:none;border-top:3px solid var(--gold);border-radius:3px 3px 0 0;margin-top:4px"></div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div class="play-sidebar">
+        <div class="sb-sec">
+          <h4>Lagets HP</h4>
+          <div class="hp-wrap"><div class="hp-bar hp-party" id="sideHpBar" style="width:100%"></div></div>
+          <div class="hp-lbl"><span id="sideHpNow">100</span> / <span id="sideHpMax">100</span></div>
+        </div>
+        <div class="sb-sec">
+          <h4>Juster Live</h4>
+          <div class="live-row"><label>HP</label><button class="adj-btn" onclick="adjustHp(-10)">−</button><span class="adj-val" id="adjHpVal">100</span><button class="adj-btn" onclick="adjustHp(10)">+</button></div>
+          <div class="live-row"><label>Potions</label><button class="adj-btn" onclick="adjustPotions(-1)">−</button><span class="adj-val" id="adjPotVal">3</span><button class="adj-btn" onclick="adjustPotions(1)">+</button></div>
+          <div class="live-row"><label>Eliksir</label><button class="adj-btn" onclick="adjustHints(-1)">−</button><span class="adj-val" id="adjHintVal">2</span><button class="adj-btn" onclick="adjustHints(1)">+</button></div>
+        </div>
+        <div class="sb-sec">
+          <h4>🧪 Eliksir (Hint)</h4>
+          <button class="eliksir-btn" onclick="useHint()">BRUK ELIKSIR (<span id="hintCount">2</span>)</button>
+          <div class="hint-popup" id="hintPopup"></div>
+        </div>
+        <div class="sb-sec">
+          <h4>⏱ Hurtigtimer</h4>
+          <div class="quick-timer-display idle" id="qtDisplay" onclick="qtToggle()">10</div>
+          <div class="qt-row">
+            <button class="qt-btn" onclick="qtSet(5)">5s</button>
+            <button class="qt-btn" onclick="qtSet(10)">10s</button>
+            <button class="qt-btn" onclick="qtSet(15)">15s</button>
+            <button class="qt-btn" onclick="qtSet(30)">30s</button>
+          </div>
+        </div>
+        <div class="sb-sec">
+          <h4>💀 Død</h4>
+          <button class="death-btn" onclick="triggerDeath()">💀 LAGET DØR</button>
+        </div>
+        <div class="sb-sec">
+          <h4>Runde</h4>
+          <div class="round-num" id="roundNum">1</div>
+        </div>
+        <div class="sb-sec">
+          <h4>🧪 Potion</h4>
+          <button class="eliksir-btn" style="background:linear-gradient(180deg,rgba(26,74,26,.8),rgba(18,52,18,.8));border-color:var(--green)" onclick="healParty()">DRIKK POTION (<span id="potionCountGlobal">3</span>)</button>
+        </div>
+        <div class="sb-sec">
+          <h4>🔊 Volum</h4>
+          <input type="range" min="0" max="1" step="0.05" value="1" style="width:100%;accent-color:var(--gold)" oninput="setVolume(this.value)">
+        </div>
+        <div class="sb-sec">
+          <h4>Reset</h4>
+          <button class="reset-btn" onclick="resetAll()">FULL RESET</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MODE -->
+  <div id="editMode">
+    <div class="edit-layout">
+      <div class="scene-list">
+        <div class="sl-header"><span>SCENER</span><button class="add-scene-btn" onclick="addScene()">+ NY</button></div>
+        <div class="sl-items" id="slItems"></div>
+      </div>
+      <div class="edit-panel" id="editPanel">
+        <div class="no-sel"><div class="big">📜</div><p>Velg eller opprett en scene</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="bgMusic" loop></audio>
+<audio id="transitionAudio"></audio>
+<audio id="arrivalAudio"></audio>
+<audio id="medleyAudio"></audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// ==================== PARTICLES ====================
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+const particles = Array.from({length: 60}, () => ({
+  x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+  vx: (Math.random() - .5) * .4, vy: -Math.random() * .6 - .2,
+  size: Math.random() * 2 + .5, opacity: Math.random() * .6 + .1,
+  color: Math.random() > .6 ? '#c9972a' : Math.random() > .5 ? '#e05040' : '#7a3aaa'
+}));
+function animParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.y < -5) { p.y = canvas.height + 5; p.x = Math.random() * canvas.width; }
+    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+    ctx.save(); ctx.globalAlpha = p.opacity;
+    ctx.fillStyle = p.color; ctx.shadowBlur = 6; ctx.shadowColor = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  });
+  requestAnimationFrame(animParticles);
+}
+animParticles();
+
+// ==================== DATA ====================
+const BADGE = {story:'badge-story',boss:'badge-boss',choice:'badge-choice',roll:'badge-roll',medley:'badge-medley',quiz:'badge-quiz',wordsearch:'badge-wordsearch',countdown:'badge-countdown',memory:'badge-memory'};
+const TLABEL = {story:'SCENE',boss:'BOSS-KAMP',choice:'VEIVALG',roll:'TERNINGKAST',medley:'MUSIKK-BOSS',quiz:'QUIZ',wordsearch:'BOKSTAVBRETT',countdown:'NEDTELLING',memory:'HUSKELISTE'};
+const FANTASY_ICONS = ['⚔️','🛡️','🏰','🐉','🔮','💎','🗡️','🏹','🧙','🧝','🔥','❄️','⚡','🌙','☀️','🍄','🧪','💀','👑','🗺️','🦁','🐺','🦅','🐍','🌿','🪄','🔑','⚙️','🎭','🧲','🪓','🏺','🌊','🦋','🕯️','🧿','🫀','🪬','🌋','🐦','🦊','🐻','🦌','🦉','🐗','🌺','🍎','🌟','🎯','🎲'];
+
+let campaign = {name:'Ny kampanje',startScene:null,partyMaxHp:100,partyPotions:3,partyHints:2,potionHeal:20,transitionSoundUrl:'',deathScene:'',sceneOrder:[],scenes:{}};
+let ps = {scene:null,partyHp:100,potions:3,hints:2,round:1,bossHp:0,bossMaxHp:0};
+let editSel = null, currentMusic = '', videoFullscreen = false;
+
+// Game state
+let quiz = {questions:[],current:0,correct:0,wrong:0,dmgPerWrong:10,rewardPerCorrect:0,rewardType:'hp'};
+let countdown = {total:60,remaining:60,running:false,timer:null};
+let wordsearch = {grid:[],words:[],found:[],size:12,secret:'',selecting:false,startCell:null,selected:[]};
+let medley = {songs:[],current:-1,results:[],threshold:10,playing:false,timer:null};
+let memory = {icons:[],gridIcons:[],found:[],wrong:0,dmgPerWrong:10,showTime:5,timer:null,phase:'idle'};
+
+function uid() { return 'sc_'+Math.random().toString(36).slice(2,9); }
+
+function notify(msg, dur=2200) {
+  const n = document.getElementById('notif');
+  n.textContent = msg; n.classList.add('show');
+  clearTimeout(n._t); n._t = setTimeout(() => n.classList.remove('show'), dur);
+}
+
+function flash(color='red') {
+  const f = document.getElementById('screenFlash');
+  f.className = 'screen-flash '+color+' show';
+  setTimeout(() => f.classList.remove('show'), 300);
+}
+
+function doTransition() {
+  const t = document.getElementById('sceneTransition');
+  t.classList.remove('active');
+  void t.offsetWidth;
+  t.classList.add('active');
+}
+
+function playMusic(url) {
+  const a = document.getElementById('bgMusic');
+  if (!url) { a.pause(); a.src = ''; currentMusic = ''; return; }
+  if (url === currentMusic) return;
+  currentMusic = url; a.src = url; a.play().catch(()=>{});
+}
+
+function playTransition() {
+  if (!campaign.transitionSoundUrl) return;
+  const a = document.getElementById('transitionAudio');
+  a.src = campaign.transitionSoundUrl; a.currentTime = 0; a.play().catch(()=>{});
+}
+
+function playArrival(arrivalUrl, musicUrl) {
+  const a = document.getElementById('arrivalAudio');
+  const bg = document.getElementById('bgMusic');
+  // Stopp alltid gammel musikk først
+  bg.pause(); bg.src = ''; currentMusic = '';
+  if (!arrivalUrl) {
+    if (musicUrl) playMusic(musicUrl);
+    return;
+  }
+  a.src = arrivalUrl; a.currentTime = 0;
+  a.play().catch(()=>{ if (musicUrl) playMusic(musicUrl); });
+  a.onended = () => { if (musicUrl) playMusic(musicUrl); a.onended = null; };
+}
+
+function toggleFullscreenVideo() {
+  const left = document.getElementById('playLeft');
+  videoFullscreen = !videoFullscreen;
+  if (videoFullscreen) {
+    left.classList.add('video-fullscreen');
+    document.getElementById('fsBtn').textContent = '✕ LUKK';
+  } else {
+    left.classList.remove('video-fullscreen');
+    document.getElementById('fsBtn').textContent = '⛶ FULLSKJERM';
+  }
+}
+
+let devMode = true; // starts in dev mode (all buttons visible)
+
+function toggleDevMode() {
+  devMode = !devMode;
+  applyDevMode();
+  notify(devMode ? '🛠 Utviklermodus' : '🎮 Spillmodus');
+}
+
+let sceneHistory = [];
+
+function startGame() {
+  if (!campaign.startScene) { notify('Ingen startscene satt!'); return; }
+  sceneHistory = [];
+  ps.partyHp = campaign.partyMaxHp;
+  ps.potions = campaign.partyPotions;
+  ps.hints = campaign.partyHints;
+  ps.round = 1;
+  ps.scene = null;
+  updateSidebar();
+  switchMode('play');
+  loadScene(campaign.startScene);
+}
+
+function goBack() {
+  if (sceneHistory.length < 2) { notify('Ingen forrige scene.'); return; }
+  sceneHistory.pop(); // fjern nåværende
+  const prev = sceneHistory.pop(); // hent forrige (loadScene pusher den igjen)
+  loadScene(prev);
+}
+
+function updatePlay() {
+  const target = ps.scene || campaign.startScene;
+  if (!target) { notify('Ingen scene å oppdatere.'); return; }
+  switchMode('play');
+  loadScene(target);
+  notify('✓ Spillet oppdatert!');
+}
+
+function applyDevMode() {
+  const dt = document.getElementById('devTools');
+  const btnEdit = document.getElementById('btnEdit');
+  const btnUpdate = document.getElementById('btnUpdate');
+  const btnRestart = document.getElementById('btnRestart');
+  const btnBack = document.getElementById('btnBack');
+  const btnDev = document.getElementById('btnDevMode');
+  if (dt) dt.style.display = devMode ? 'flex' : 'none';
+  if (btnEdit) btnEdit.style.display = devMode ? '' : 'none';
+  if (btnUpdate) btnUpdate.style.display = devMode ? '' : 'none';
+  if (btnRestart) btnRestart.style.display = !devMode ? '' : 'none';
+  if (btnBack) btnBack.style.display = !devMode ? '' : 'none';
+  if (btnDev) btnDev.textContent = devMode ? '🎮 SPILLMODUS' : '🛠 UTVIKLERMODUS';
+}
+
+function restartGame() {
+  sceneHistory = [];
+  ps.partyHp = campaign.partyMaxHp;
+  ps.potions = campaign.partyPotions;
+  ps.hints = campaign.partyHints;
+  ps.round = 1;
+  ps.scene = null;
+  updateSidebar();
+  if (campaign.startScene) loadScene(campaign.startScene);
+  notify('↺ Spillet restartet!');
+}
+
+function switchMode(m) {
+  document.getElementById('playMode').style.display = m==='play' ? 'flex' : 'none';
+  document.getElementById('editMode').style.display = m==='edit' ? 'flex' : 'none';
+  document.getElementById('btnPlay').className = 'nav-btn'+(m==='play'?' active':'');
+  document.getElementById('btnEdit').className = 'nav-btn'+(m==='edit'?' active':'');
+  if (m==='edit') renderSceneList();
+  if (m==='play') applyDevMode();
+}
+
+const SECTIONS = ['storyChoices','rollSection','bossSection','quizSection','countdownSection','wordsearchSection','memorySection','medleySection','hintPopup'];
+
+function loadScene(id) {
+  const s = campaign.scenes[id]; if (!s) return;
+  doTransition();
+  playTransition();
+  playArrival(s.arrivalSoundUrl || '', s.type !== 'medley' ? (s.musicUrl || '') : '');
+  ps.scene = id;
+  sceneHistory.push(id);
+  const ind = document.getElementById('sceneIndicator');
+  if (ind) ind.textContent = '→ ' + (s.title||id);
+
+  // badge hidden - type shown by panel content instead
+
+  // Apply fullscreen setting for this scene
+  const left = document.getElementById('playLeft');
+  if (s.startFullscreen && !videoFullscreen) {
+    videoFullscreen = true;
+    left.classList.add('video-fullscreen');
+  } else if (!s.startFullscreen && videoFullscreen) {
+    videoFullscreen = false;
+    left.classList.remove('video-fullscreen');
+  }
+
+  // Media — clear ALL children first, then rebuild
+  left.innerHTML = '';
+
+  const overlay = `<div class="media-overlay"><div class="scene-title-play" id="playTitle">${s.title||''}</div></div>`;
+  const controls = `<div class="media-top-controls" id="mediaTopControls"><button class="mc-btn" onclick="toggleFullscreenVideo()" id="fsBtn">${videoFullscreen?'✕ LUKK':'⛶ FULLSKJERM'}</button></div>`;
+
+  if (s.videoUrl) {
+    let src = s.videoUrl;
+    const vid = src.match(/(?:v=|youtu\.be\/)([^&?]+)/)?.[1];
+    if (vid) src = `https://www.youtube.com/embed/${vid}?autoplay=1`;
+    const iframe = document.createElement('iframe');
+    iframe.src = src; iframe.allowFullscreen = true; iframe.allow = 'autoplay; encrypted-media';
+    left.appendChild(iframe);
+  } else if (s.imageUrl) {
+    const img = document.createElement('img');
+    img.src = s.imageUrl; img.alt = '';
+    left.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'media-placeholder'; ph.textContent = s.emoji || '🏰';
+    left.appendChild(ph);
+  }
+  left.insertAdjacentHTML('beforeend', overlay + controls);
+
+  if (s.type === 'medley') document.getElementById('bgMusic').pause();
+
+  // Text placement: story/choice = top (left border), others = below widget (centered)
+  const ptTop = document.getElementById('playText');
+  const ptBot = document.getElementById('playTextBelow');
+  const isStoryLike = s.type==='story' || s.type==='choice';
+  ptTop.textContent = s.text || '';
+  ptTop.style.display = isStoryLike && s.text ? 'block' : 'none';
+  ptBot.textContent = s.text || '';
+  ptBot.style.display = !isStoryLike && s.text ? 'block' : 'none';
+
+  SECTIONS.forEach(x => { const el = document.getElementById(x); if(el) el.style.display='none'; });
+
+  if (s.type==='story'||s.type==='choice') {
+    const d = document.getElementById('choicesBtns'); d.innerHTML = '';
+    (s.choices||[]).forEach(c => {
+      const b = document.createElement('button'); b.className = 'choice-btn';
+      b.innerHTML = '<span class="choice-arrow">▶</span>'+(c.label||'Valg');
+      b.onclick = () => loadScene(c.target); d.appendChild(b);
+    });
+    if ((s.choices||[]).length) document.getElementById('storyChoices').style.display = 'block';
+  }
+  if (s.type==='roll') {
+    document.getElementById('rollSection').style.display = 'block';
+    document.getElementById('rollResultText').style.display = 'none';
+    document.getElementById('rollChoices').innerHTML = ''; calcRoll();
+  }
+  if (s.type==='boss') {
+    document.getElementById('bossSection').style.display = 'block';
+    document.getElementById('bossNamePlay').textContent = s.bossName || 'Bossen';
+    document.getElementById('bossEmoji').textContent = s.bossEmoji || '👹';
+    const mhp = parseInt(s.bossMaxHp)||100;
+    ps.bossMaxHp = mhp; ps.bossHp = mhp; updateBossHp(mhp);
+    document.getElementById('bossDoneSection').style.display = 'none';
+    document.getElementById('bRollText').style.display = 'none';
+  }
+  if (s.type==='quiz') { document.getElementById('quizSection').style.display='block'; initQuiz(s); }
+  if (s.type==='countdown') { document.getElementById('countdownSection').style.display='block'; initCountdown(s); }
+  if (s.type==='wordsearch') { document.getElementById('wordsearchSection').style.display='block'; initWordsearch(s); }
+  if (s.type==='memory') { document.getElementById('memorySection').style.display='block'; initMemory(s); }
+  if (s.type==='medley') { document.getElementById('medleySection').style.display='block'; initMedley(s); }
+  updateSidebar();
+}
+
+// ==================== QUIZ ====================
+function initQuiz(s) {
+  quiz.questions = s.questions || [];
+  quiz.current = 0; quiz.correct = 0; quiz.wrong = 0;
+  quiz.dmgPerWrong = parseInt(s.dmgPerWrong)||10;
+  quiz.rewardPerCorrect = parseInt(s.rewardPerCorrect)||0;
+  quiz.rewardType = s.rewardType||'hp';
+  quiz.winThreshold = parseInt(s.winThreshold) || Math.ceil((s.questions||[]).length / 2);
+  document.getElementById('quizResult').style.display = 'none';
+  document.getElementById('quizDoneSection').style.display = 'none';
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  const q = quiz.questions[quiz.current];
+  if (!q) { quizFinish(); return; }
+  document.getElementById('quizQNum').textContent = `SPØRSMÅL ${quiz.current+1} / ${quiz.questions.length}`;
+  document.getElementById('quizQuestion').textContent = q.question || '';
+  document.getElementById('quizCorrect').innerHTML = `${quiz.correct}<span>RIKTIGE</span>`;
+  document.getElementById('quizWrong').innerHTML = `${quiz.wrong}<span>FEIL</span>`;
+  // Hint
+  const hintBtn = document.getElementById('quizHintBtn');
+  const hintEl = document.getElementById('quizHintText');
+  hintEl.style.display = 'none';
+  hintEl.textContent = q.hint || '';
+  hintBtn.style.display = q.hint ? 'block' : 'none';
+  hintBtn.textContent = '🧪 VIS HINT';
+  // Show question image in media area if present
+  if (q.imageUrl) {
+    const left = document.getElementById('playLeft');
+    const existing = left.querySelector('img,iframe,.media-placeholder');
+    if (existing) existing.remove();
+    const img = document.createElement('img'); img.src = q.imageUrl; img.alt = '';
+    left.insertBefore(img, left.firstChild);
+  }
+}
+
+function quizMark(correct) {
+  if (quiz.current >= quiz.questions.length) return;
+  if (correct) {
+    quiz.correct++;
+    flash('green');
+    if (quiz.rewardPerCorrect > 0) {
+      if (quiz.rewardType === 'hp') { ps.partyHp = Math.min(campaign.partyMaxHp, ps.partyHp + quiz.rewardPerCorrect); notify(`✓ Riktig! +${quiz.rewardPerCorrect} HP`); }
+      else { ps.potions++; notify('✓ Riktig! +1 Potion'); }
+    } else { notify('✓ Riktig!'); }
+  } else {
+    quiz.wrong++;
+    flash('red');
+    ps.partyHp = Math.max(0, ps.partyHp - quiz.dmgPerWrong);
+    notify(`✗ Feil! −${quiz.dmgPerWrong} HP`);
+  }
+  updateSidebar();
+  quiz.current++;
+  renderQuizQuestion();
+}
+
+function quizNext() {
+  if (quiz.current < quiz.questions.length) { quiz.current++; renderQuizQuestion(); }
+}
+
+function quizFinish() {
+  const total = quiz.questions.length;
+  const won = quiz.correct >= quiz.winThreshold;
+  const res = document.getElementById('quizResult');
+  res.textContent = `Quiz ferdig! ${quiz.correct}/${total} riktige — trengte ${quiz.winThreshold}`;
+  res.className = 'quiz-result '+(won ? 'r-hit' : 'r-miss');
+  res.style.display = 'block';
+  const s = campaign.scenes[ps.scene];
+  const dd = document.getElementById('quizDoneSection'); dd.innerHTML = '';
+  const choices = won ? (s?.winChoices||[]) : (s?.loseChoices||[]);
+  choices.forEach(c => {
+    const b = document.createElement('button'); b.className = 'choice-btn';
+    b.innerHTML = '<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');
+    b.onclick = () => loadScene(c.target); dd.appendChild(b);
+  });
+  dd.style.display = 'block';
+}
+
+// ==================== COUNTDOWN ====================
+function initCountdown(s) {
+  countdown.total = parseInt(s.countdownSeconds)||60;
+  countdown.remaining = countdown.total;
+  countdown.running = false;
+  clearInterval(countdown.timer);
+  document.getElementById('cdStartBtn').style.display = 'block';
+  document.getElementById('cdPauseBtn').style.display = 'none';
+  document.getElementById('countdownDoneSection').style.display = 'none';
+  renderCountdown();
+}
+
+function renderCountdown() {
+  const d = document.getElementById('countdownDisplay');
+  d.textContent = countdown.remaining;
+  d.className = 'countdown-display' + (countdown.remaining <= 10 ? ' urgent' : '');
+}
+
+function countdownStart() {
+  if (countdown.running) return;
+  countdown.running = true;
+  document.getElementById('cdStartBtn').style.display = 'none';
+  document.getElementById('cdPauseBtn').style.display = 'inline-block';
+  countdown.timer = setInterval(() => {
+    if (countdown.remaining <= 0) {
+      clearInterval(countdown.timer); countdown.running = false;
+      countdownDone(); return;
+    }
+    countdown.remaining--;
+    renderCountdown();
+  }, 1000);
+}
+
+function countdownPause() {
+  clearInterval(countdown.timer); countdown.running = false;
+  document.getElementById('cdStartBtn').style.display = 'block';
+  document.getElementById('cdStartBtn').textContent = '▶ FORTSETT';
+  document.getElementById('cdPauseBtn').style.display = 'none';
+}
+
+function countdownReset() {
+  clearInterval(countdown.timer); countdown.running = false;
+  countdown.remaining = countdown.total;
+  document.getElementById('cdStartBtn').style.display = 'block';
+  document.getElementById('cdStartBtn').textContent = '▶ START NEDTELLING';
+  document.getElementById('cdPauseBtn').style.display = 'none';
+  document.getElementById('countdownDoneSection').style.display = 'none';
+  renderCountdown();
+}
+
+function countdownDone() {
+  flash('red'); notify('⏱ TID UTE!', 3000);
+  const s = campaign.scenes[ps.scene];
+  const dd = document.getElementById('countdownDoneSection'); dd.innerHTML = '';
+  (s?.choices||[]).forEach(c => {
+    const b = document.createElement('button'); b.className = 'choice-btn';
+    b.innerHTML = '<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');
+    b.onclick = () => loadScene(c.target); dd.appendChild(b);
+  });
+  dd.style.display = 'block';
+}
+
+// ==================== WORD SEARCH ====================
+const NO_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ';
+
+function initWordsearch(s) {
+  wordsearch.words = (s.wsWords||[]).map(w => w.toUpperCase().replace(/\s/g,''));
+  wordsearch.secret = s.wsSecret || '';
+  wordsearch.size = parseInt(s.wsSize)||12;
+  wordsearch.found = [];
+  wordsearch.selecting = false;
+  wordsearch.startCell = null;
+  wordsearch.selected = [];
+  buildGrid();
+  renderWordList();
+  document.getElementById('wsSecret').style.display = 'none';
+  document.getElementById('wsDoneSection').style.display = 'none';
+}
+
+function buildGrid() {
+  const n = wordsearch.size;
+  const grid = Array.from({length:n}, () => Array(n).fill(''));
+  const directions = [[0,1],[1,0],[1,1],[0,-1],[-1,0],[-1,-1],[1,-1],[-1,1]];
+
+  wordsearch.words.forEach(word => {
+    let placed = false;
+    for (let attempt = 0; attempt < 200 && !placed; attempt++) {
+      const dir = directions[Math.floor(Math.random()*directions.length)];
+      const sr = Math.floor(Math.random()*n), sc = Math.floor(Math.random()*n);
+      let ok = true;
+      for (let i = 0; i < word.length; i++) {
+        const r = sr+dir[0]*i, c = sc+dir[1]*i;
+        if (r<0||r>=n||c<0||c>=n) { ok=false; break; }
+        if (grid[r][c] && grid[r][c] !== word[i]) { ok=false; break; }
+      }
+      if (ok) {
+        for (let i = 0; i < word.length; i++) grid[sr+dir[0]*i][sc+dir[1]*i] = word[i];
+        placed = true;
+      }
+    }
+  });
+
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      if (!grid[r][c]) grid[r][c] = NO_ALPHA[Math.floor(Math.random()*NO_ALPHA.length)];
+
+  wordsearch.grid = grid;
+  renderGrid();
+}
+
+function renderGrid() {
+  const g = document.getElementById('wsGrid');
+  const n = wordsearch.size;
+  g.style.gridTemplateColumns = `repeat(${n}, 28px)`;
+  g.innerHTML = '';
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'ws-cell';
+      cell.textContent = wordsearch.grid[r][c];
+      cell.dataset.r = r; cell.dataset.c = c;
+      cell.onmousedown = () => wsStartSelect(r,c);
+      cell.onmouseenter = () => wsContinueSelect(r,c);
+      cell.onmouseup = () => wsEndSelect(r,c);
+      g.appendChild(cell);
+    }
+  }
+  document.addEventListener('mouseup', wsEndSelectGlobal);
+  updateGridHighlights();
+}
+
+function wsStartSelect(r,c) {
+  wordsearch.selecting = true;
+  wordsearch.startCell = {r,c};
+  wordsearch.selected = [{r,c}];
+  updateGridHighlights();
+}
+
+function wsContinueSelect(r,c) {
+  if (!wordsearch.selecting) return;
+  const start = wordsearch.startCell;
+  const dr = c - start.c === 0 ? 0 : (c > start.c ? 1 : -1);
+  const drow = r - start.r === 0 ? 0 : (r > start.r ? 1 : -1);
+  const len = Math.max(Math.abs(r-start.r), Math.abs(c-start.c)) + 1;
+  wordsearch.selected = [];
+  for (let i = 0; i < len; i++) {
+    wordsearch.selected.push({r: start.r + drow*i, c: start.c + dr*i});
+  }
+  updateGridHighlights();
+}
+
+function wsEndSelect(r,c) {
+  if (!wordsearch.selecting) return;
+  wordsearch.selecting = false;
+  const sel = wordsearch.selected;
+  const word = sel.map(p => wordsearch.grid[p.r]?.[p.c] || '').join('');
+  const wordRev = word.split('').reverse().join('');
+  const match = wordsearch.words.find(w => (w===word||w===wordRev) && !wordsearch.found.includes(w));
+  if (match) {
+    wordsearch.found.push(match);
+    sel.forEach(p => {
+      const idx = p.r * wordsearch.size + p.c;
+      const cells = document.querySelectorAll('.ws-cell');
+      if (cells[idx]) cells[idx].classList.add('found');
+    });
+    notify(`✓ "${match}" funnet!`);
+    renderWordList();
+    updateGridHighlights();
+    if (wordsearch.found.length === wordsearch.words.length) wsDone();
+  }
+  wordsearch.selected = [];
+  updateGridHighlights();
+}
+
+function wsEndSelectGlobal() { if (wordsearch.selecting) { wordsearch.selecting = false; wordsearch.selected = []; updateGridHighlights(); } }
+
+function updateGridHighlights() {
+  const cells = document.querySelectorAll('.ws-cell');
+  cells.forEach(cell => {
+    const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
+    const isSel = wordsearch.selected.some(p => p.r===r && p.c===c);
+    if (!cell.classList.contains('found')) cell.classList.toggle('selected', isSel);
+  });
+}
+
+function renderWordList() {
+  const d = document.getElementById('wsWordList'); d.innerHTML = '';
+  wordsearch.words.forEach(w => {
+    if (!wordsearch.found.includes(w)) return; // skjul ord som ikke er funnet ennå
+    const el = document.createElement('div');
+    el.className = 'ws-word found';
+    el.textContent = w; d.appendChild(el);
+  });
+  const remaining = wordsearch.words.length - wordsearch.found.length;
+  document.getElementById('wsProgress').textContent =
+    `${wordsearch.found.length} / ${wordsearch.words.length} ord funnet${remaining > 0 ? ` — ${remaining} gjenstår` : ''}`;
+}
+
+function wsDone() {
+  notify('🏆 ALLE ORD FUNNET!', 3000);
+  const sec = document.getElementById('wsSecret');
+  if (wordsearch.secret) { sec.textContent = '🔑 ' + wordsearch.secret; sec.style.display = 'block'; }
+  const s = campaign.scenes[ps.scene];
+  const dd = document.getElementById('wsDoneSection'); dd.innerHTML = '';
+  (s?.winChoices||[]).forEach(c => {
+    const b = document.createElement('button'); b.className = 'choice-btn';
+    b.innerHTML = '<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');
+    b.onclick = () => loadScene(c.target); dd.appendChild(b);
+  });
+  dd.style.display = 'block';
+}
+
+// ==================== MEMORY ====================
+function initMemory(s) {
+  const count = parseInt(s.memIconCount)||10;
+  const gridSize = parseInt(s.memGridSize)||50;
+  memory.showTime = parseInt(s.memShowTime)||5;
+  memory.dmgPerWrong = parseInt(s.memDmgPerWrong)||10;
+  const pool = [...FANTASY_ICONS];
+  for (let i = pool.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  memory.icons = pool.slice(0, count);
+  const remaining = pool.slice(count);
+  const gridPool = [...memory.icons, ...remaining.slice(0, gridSize - count)];
+  for (let i = gridPool.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [gridPool[i],gridPool[j]]=[gridPool[j],gridPool[i]]; }
+  memory.gridIcons = gridPool;
+  memory.found = []; memory.wrong = 0; memory.phase = 'idle';
+  document.getElementById('memPhase').textContent = `Husk disse ${count} ikonene!`;
+  document.getElementById('memTimer').style.display = 'none';
+  document.getElementById('memShowIcons').style.display = 'none';
+  document.getElementById('memGrid').style.display = 'none';
+  document.getElementById('memScore').style.display = 'none';
+  document.getElementById('memStartBtn').style.display = 'block';
+  document.getElementById('memStartBtn').textContent = '▶ VIS IKONER';
+  document.getElementById('memDoneSection').style.display = 'none';
+}
+
+function memoryStart() {
+  document.getElementById('memStartBtn').style.display = 'none';
+  document.getElementById('memShowIcons').style.display = 'flex';
+  document.getElementById('memShowIcons').innerHTML = memory.icons.map(i=>`<div class="mem-icon-show">${i}</div>`).join('');
+  document.getElementById('memTimer').style.display = 'block';
+  let t = memory.showTime;
+  document.getElementById('memTimer').textContent = t;
+  memory.timer = setInterval(() => {
+    t--;
+    document.getElementById('memTimer').textContent = t;
+    if (t <= 0) {
+      clearInterval(memory.timer);
+      document.getElementById('memShowIcons').style.display = 'none';
+      document.getElementById('memTimer').style.display = 'none';
+      showMemoryGrid();
+    }
+  }, 1000);
+}
+
+function showMemoryGrid() {
+  memory.phase = 'guessing';
+  document.getElementById('memPhase').textContent = `Klikk på de ${memory.icons.length} riktige ikonene!`;
+  const grid = document.getElementById('memGrid');
+  const cols = Math.ceil(Math.sqrt(memory.gridIcons.length));
+  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  grid.innerHTML = '';
+  memory.gridIcons.forEach((icon, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'mem-cell'; cell.textContent = icon; cell.dataset.idx = i;
+    cell.onclick = () => memoryClick(i, icon, cell);
+    grid.appendChild(cell);
+  });
+  grid.style.display = 'grid';
+  document.getElementById('memScore').style.display = 'block';
+  updateMemScore();
+}
+
+function memoryClick(i, icon, cell) {
+  if (cell.classList.contains('correct') || cell.classList.contains('wrong')) return;
+  if (memory.icons.includes(icon) && !memory.found.includes(i)) {
+    memory.found.push(i);
+    cell.classList.add('correct');
+    flash('green');
+    notify(`✓ ${icon} riktig!`);
+    if (memory.found.length === memory.icons.length) memoryDone();
+  } else {
+    memory.wrong++;
+    cell.classList.add('wrong');
+    flash('red');
+    ps.partyHp = Math.max(0, ps.partyHp - memory.dmgPerWrong);
+    notify(`✗ Feil! −${memory.dmgPerWrong} HP`);
+    updateSidebar();
+    setTimeout(() => cell.classList.remove('wrong'), 600);
+  }
+  updateMemScore();
+}
+
+function updateMemScore() {
+  document.getElementById('memScore').textContent = `${memory.found.length} / ${memory.icons.length} funnet — ${memory.wrong} feil`;
+}
+
+function memoryDone() {
+  notify('🏆 ALLE IKONER FUNNET!', 3000);
+  const s = campaign.scenes[ps.scene];
+  const dd = document.getElementById('memDoneSection'); dd.innerHTML = '';
+  (s?.winChoices||[]).forEach(c => {
+    const b = document.createElement('button'); b.className = 'choice-btn';
+    b.innerHTML = '<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');
+    b.onclick = () => loadScene(c.target); dd.appendChild(b);
+  });
+  dd.style.display = 'block';
+}
+
+// ==================== MEDLEY ====================
+function initMedley(s) {
+  medley.songs = s.songs||[]; medley.threshold = parseInt(s.medleyThreshold)||10;
+  medley.current = -1; medley.results = []; medley.playing = false;
+  clearTimeout(medley.timer);
+  document.getElementById('medleyAudio').pause();
+  document.getElementById('medResult').style.display = 'none';
+  document.getElementById('medleyDoneSection').style.display = 'none';
+  document.getElementById('medPlayBtn').textContent = '▶ SPILL NESTE';
+  document.getElementById('medSongInfo').textContent = 'Klar — trykk SPILL NESTE';
+  document.getElementById('medThreshText').textContent = `Trenger minst ${medley.threshold} av ${medley.songs.length} riktige`;
+  // Medley hint (scene-level)
+  const hintBtn = document.getElementById('medleyHintBtn');
+  const hintEl = document.getElementById('medleyHintText');
+  hintEl.style.display = 'none';
+  hintEl.textContent = s.hint || '';
+  hintBtn.style.display = s.hint ? 'block' : 'none';
+  hintBtn.textContent = '🧪 VIS HINT';
+  renderMedleyProgress(); updateMedleyScore();
+}
+
+function renderMedleyProgress() {
+  document.getElementById('medProgress').innerHTML = medley.songs.map((s,i) => {
+    let cls = 'song-dot';
+    if (i===medley.current) cls+=' playing';
+    else if (medley.results[i]===true) cls+=' correct';
+    else if (medley.results[i]===false) cls+=' wrong';
+    return `<div class="${cls}">${i+1}</div>`;
+  }).join('');
+}
+
+function updateMedleyScore() {
+  document.getElementById('medScore').innerHTML = `${medley.results.filter(r=>r===true).length}<span>RIKTIGE</span>`;
+  document.getElementById('medTotal').innerHTML = `${medley.results.filter(r=>r!==undefined).length}<span>SPILT</span>`;
+}
+
+function medleyPlayNext() {
+  if (medley.playing) return;
+  const next = medley.current + 1;
+  if (next >= medley.songs.length) { medleyFinish(); return; }
+  medley.current = next;
+  const song = medley.songs[next];
+  const dur = parseInt(song.duration)||2;
+  document.getElementById('medSongInfo').textContent = `🎵 Sang ${next+1} av ${medley.songs.length} (${dur}s)...`;
+  document.getElementById('medPlayBtn').textContent = '⏸ SPILLER...';
+  // Hide hint while song plays
+  document.getElementById('medleyHintBtn').style.display = 'none';
+  document.getElementById('medleyHintText').style.display = 'none';
+  medley.playing = true; renderMedleyProgress();
+  if (song.url) {
+    const a = document.getElementById('medleyAudio');
+    a.src = song.url; a.currentTime = parseInt(song.startSec)||0;
+    a.play().catch(()=>{});
+    medley.timer = setTimeout(() => { a.pause(); medleyAfterPlay(next); }, dur*1000);
+  } else {
+    medley.timer = setTimeout(() => medleyAfterPlay(next), dur*1000);
+  }
+}
+
+function medleyAfterPlay(idx) {
+  medley.playing = false;
+  document.getElementById('medPlayBtn').textContent = '▶ SPILL NESTE';
+  document.getElementById('medSongInfo').textContent = `Sang ${idx+1} ferdig — riktig eller feil?`;
+  // Show hint button if this song has a hint
+  const song = medley.songs[idx];
+  const hintBtn = document.getElementById('medleyHintBtn');
+  const hintEl = document.getElementById('medleyHintText');
+  hintEl.style.display = 'none';
+  hintEl.textContent = song?.hint || '';
+  hintBtn.style.display = song?.hint ? 'block' : 'none';
+  hintBtn.textContent = '🧪 VIS HINT';
+}
+
+function medleyMark(correct) {
+  if (medley.current < 0 || medley.results[medley.current] !== undefined) return;
+  medley.results[medley.current] = correct;
+  notify(correct ? '✓ Riktig!' : '✗ Feil');
+  renderMedleyProgress(); updateMedleyScore();
+  if (medley.current >= medley.songs.length-1) setTimeout(medleyFinish, 400);
+}
+
+function medleySkip() {
+  if (medley.current < 0) return;
+  clearTimeout(medley.timer); document.getElementById('medleyAudio').pause();
+  medley.playing = false;
+  if (medley.results[medley.current] === undefined) medley.results[medley.current] = false;
+  renderMedleyProgress(); updateMedleyScore();
+  document.getElementById('medPlayBtn').textContent = '▶ SPILL NESTE';
+}
+
+function medleyReplayCurrent() {
+  if (medley.current < 0) { notify('Ingen sang spilt ennå.'); return; }
+  const song = medley.songs[medley.current];
+  const dur = parseInt(song.duration)||2;
+  document.getElementById('medSongInfo').textContent = `🎵 Spiller sang ${medley.current+1} igjen (${dur}s)...`;
+  document.getElementById('medPlayBtn').textContent = '⏸ SPILLER...';
+  document.getElementById('medleyHintBtn').style.display = 'none';
+  document.getElementById('medleyHintText').style.display = 'none';
+  medley.playing = true;
+  clearTimeout(medley.timer);
+  if (song.url) {
+    const a = document.getElementById('medleyAudio');
+    a.src = song.url; a.currentTime = parseInt(song.startSec)||0;
+    a.play().catch(()=>{});
+    medley.timer = setTimeout(() => { a.pause(); medleyAfterPlay(medley.current); }, dur*1000);
+  } else {
+    medley.timer = setTimeout(() => medleyAfterPlay(medley.current), dur*1000);
+  }
+}
+
+function medleyFinish() {
+  const correct = medley.results.filter(r=>r===true).length;
+  const won = correct >= medley.threshold;
+  const res = document.getElementById('medResult');
+  res.textContent = won ? `🏆 SEIER! ${correct}/${medley.songs.length} riktige!` : `💀 ${correct}/${medley.songs.length} riktige. Trengte ${medley.threshold}.`;
+  res.className = 'medley-result '+(won?'med-win':'med-lose');
+  res.style.display = 'block';
+  const s = campaign.scenes[ps.scene];
+  const dd = document.getElementById('medleyDoneSection'); dd.innerHTML = '';
+  (won ? s?.winChoices||[] : s?.loseChoices||[]).forEach(c => {
+    const b = document.createElement('button'); b.className = 'choice-btn';
+    b.innerHTML = '<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');
+    b.onclick = () => loadScene(c.target); dd.appendChild(b);
+  });
+  dd.style.display = 'block';
+}
+
+// ==================== BOSS ====================
+// ===== QUICK TIMER =====
+let qt = { seconds: 10, remaining: 10, running: false, timer: null };
+
+function qtSet(s) {
+  clearInterval(qt.timer); qt.running = false;
+  qt.seconds = s; qt.remaining = s;
+  const d = document.getElementById('qtDisplay');
+  d.textContent = s; d.className = 'quick-timer-display idle';
+}
+
+function qtToggle() {
+  if (qt.running) { // pause
+    clearInterval(qt.timer); qt.running = false;
+    document.getElementById('qtDisplay').className = 'quick-timer-display idle';
+  } else { // start
+    if (qt.remaining <= 0) { qt.remaining = qt.seconds; } // reset if done
+    qt.running = true;
+    qtTick();
+    qt.timer = setInterval(qtTick, 1000);
+  }
+}
+
+function qtTick() {
+  const d = document.getElementById('qtDisplay');
+  d.textContent = qt.remaining;
+  d.className = 'quick-timer-display' + (qt.remaining <= 3 ? ' urgent' : '');
+  if (qt.remaining <= 0) {
+    clearInterval(qt.timer); qt.running = false;
+    d.textContent = '✗'; d.className = 'quick-timer-display urgent';
+    flash('red'); notify('⏱ TID UTE!', 2000);
+    return;
+  }
+  qt.remaining--;
+}
+
+// ===== DEATH BUTTON =====
+function triggerDeath() {
+  const s = campaign.scenes[ps.scene];
+  const target = s?.deathScene || campaign.deathScene;
+  if (!target || !campaign.scenes[target]) {
+    notify('Ingen dødscene valgt — sett den i globale innstillinger.', 3000);
+    return;
+  }
+  flash('red');
+  loadScene(target);
+}
+
+// ===== QUIZ HINT =====
+function toggleQuizHint() {
+  const el = document.getElementById('quizHintText');
+  const btn = document.getElementById('quizHintBtn');
+  const visible = el.style.display === 'block';
+  if (!visible) {
+    // Reveal costs an eliksir
+    if (ps.hints <= 0) { notify('Ingen eliksir igjen!'); return; }
+    ps.hints--;
+    updateSidebar();
+    notify('🧪 Eliksir brukt!');
+  }
+  el.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '🧪 VIS HINT' : '🧪 SKJUL HINT';
+}
+
+function toggleMedleyHint() {
+  const el = document.getElementById('medleyHintText');
+  const btn = document.getElementById('medleyHintBtn');
+  const visible = el.style.display === 'block';
+  if (!visible) {
+    if (ps.hints <= 0) { notify('Ingen eliksir igjen!'); return; }
+    ps.hints--;
+    updateSidebar();
+    notify('🧪 Eliksir brukt!');
+  }
+  el.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '🧪 VIS HINT' : '🧪 SKJUL HINT';
+}
+
+function setVolume(v) {
+  ['bgMusic','transitionAudio','arrivalAudio','medleyAudio'].forEach(id => { const a = document.getElementById(id); if(a) a.volume = v; });
+}
+
+function updateSidebar() {
+  const pct = Math.max(0, ps.partyHp / campaign.partyMaxHp * 100);
+  document.getElementById('sideHpBar').style.width = pct+'%';
+  document.getElementById('sideHpNow').textContent = ps.partyHp;
+  document.getElementById('sideHpMax').textContent = campaign.partyMaxHp;
+  document.getElementById('adjHpVal').textContent = ps.partyHp;
+  document.getElementById('adjPotVal').textContent = ps.potions;
+  document.getElementById('adjHintVal').textContent = ps.hints;
+  document.getElementById('hintCount').textContent = ps.hints;
+  document.getElementById('roundNum').textContent = ps.round;
+  const pg = document.getElementById('potionCountGlobal'); if(pg) pg.textContent = ps.potions;
+}
+
+function updateBossHp(hp) {
+  ps.bossHp = Math.max(0, hp);
+  document.getElementById('bossHpBar').style.width = (ps.bossHp/ps.bossMaxHp*100)+'%';
+  document.getElementById('bossHpNow').textContent = ps.bossHp;
+  document.getElementById('bossHpMax').textContent = ps.bossMaxHp;
+}
+
+function adjustHp(d) { ps.partyHp = Math.max(0, Math.min(campaign.partyMaxHp, ps.partyHp+d)); updateSidebar(); }
+function adjustPotions(d) { ps.potions = Math.max(0, ps.potions+d); updateSidebar(); }
+function adjustHints(d) { ps.hints = Math.max(0, ps.hints+d); updateSidebar(); }
+
+function useHint() {
+  if (ps.hints <= 0) { notify('Ingen eliksir igjen!'); return; }
+  const s = campaign.scenes[ps.scene];
+  if (!s?.hint) { notify('Ingen hint for denne scenen.'); return; }
+  ps.hints--;
+  const hp = document.getElementById('hintPopup');
+  hp.textContent = s.hint; hp.style.display = hp.style.display==='block' ? 'none' : 'block';
+  updateSidebar(); notify('🧪 Eliksir brukt!');
+}
+
+function calcRoll() { document.getElementById('rollTotal').textContent=(parseInt(document.getElementById('die1').value)||0)+(parseInt(document.getElementById('die2').value)||0); }
+function calcBossRoll() { document.getElementById('bRollTotal').textContent=(parseInt(document.getElementById('bDie1').value)||0)+(parseInt(document.getElementById('bDie2').value)||0); }
+
+function applyRoll() {
+  const s = campaign.scenes[ps.scene]; if (!s) return;
+  const tot = parseInt(document.getElementById('rollTotal').textContent)||0;
+  const low = parseInt((s.thresholds||{}).low)||14, mid = parseInt((s.thresholds||{}).mid)||29;
+  const re = document.getElementById('rollResultText');
+  const cd = document.getElementById('rollChoices'); cd.innerHTML = '';
+  let outcome, lbl, cls;
+  if (tot<=low) { outcome='low'; lbl=`${tot} — Mislyktes (≤${low})`; cls='r-miss'; flash('red'); }
+  else if (tot<=mid) { outcome='mid'; lbl=`${tot} — Treff! (${low+1}–${mid})`; cls='r-hit'; flash('green'); }
+  else { outcome='high'; lbl=`${tot} — KRITISK! (≥${mid+1})`; cls='r-crit'; flash('green'); }
+  re.textContent=lbl; re.className='roll-result '+cls; re.style.display='block';
+  (s.choices||[]).filter(c=>c.outcome===outcome||c.outcome==='all').forEach(c=>{
+    const b=document.createElement('button'); b.className='choice-btn';
+    b.innerHTML='<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');
+    b.onclick=()=>loadScene(c.target); cd.appendChild(b);
+  });
+  ps.round++; updateSidebar();
+}
+
+function bossAttack() {
+  const s = campaign.scenes[ps.scene];
+  const dmg = parseInt(s?.bossDamage)||15;
+  ps.partyHp = Math.max(0, ps.partyHp - dmg);
+  flash('red'); notify(`💀 Bossen slår — ${dmg} skade!`);
+  updateSidebar(); checkPartyDead(s);
+}
+
+function partyAttack() {
+  const tot = parseInt(document.getElementById('bRollTotal').textContent)||0;
+  const s = campaign.scenes[ps.scene];
+  const low=parseInt((s?.thresholds||{}).low)||14, mid=parseInt((s?.thresholds||{}).mid)||29;
+  const re = document.getElementById('bRollText');
+  let dmg=0, lbl, cls;
+  if (tot<=low) { dmg=0; lbl=`${tot} — Bom!`; cls='r-miss'; flash('red'); }
+  else if (tot<=mid) { dmg=parseInt(s?.partyDamage)||20; lbl=`${tot} — Treff! ${dmg} skade.`; cls='r-hit'; flash('green'); }
+  else { dmg=parseInt(s?.partyCritDamage)||40; lbl=`${tot} — KRITISK! ${dmg} skade!`; cls='r-crit'; flash('green'); }
+  re.textContent=lbl; re.className='roll-result '+cls; re.style.display='block';
+  updateBossHp(ps.bossHp-dmg); ps.round++; updateSidebar(); checkBossDead(s);
+}
+
+function checkBossDead(s) {
+  if (ps.bossHp > 0) return;
+  notify('🏆 BOSSEN ER BESEIRET!', 3000); flash('green');
+  const d = document.getElementById('bossDoneSection'); d.innerHTML='';
+  (s?.winChoices||[]).forEach(c=>{const b=document.createElement('button');b.className='choice-btn';b.innerHTML='<span class="choice-arrow">▶</span>'+(c.label||'Fortsett');b.onclick=()=>loadScene(c.target);d.appendChild(b);});
+  d.style.display='block';
+}
+
+function checkPartyDead(s) {
+  if (ps.partyHp > 0) return;
+  flash('red');
+  notify('💀 HP = 0 — håndter manuelt', 4000);
+}
+
+function healParty() {
+  if (ps.potions<=0) { notify('Ingen potions!'); return; }
+  const heal = parseInt(campaign.potionHeal)||20;
+  ps.potions--; ps.partyHp = Math.min(campaign.partyMaxHp, ps.partyHp+heal);
+  flash('green'); notify(`🧪 +${heal} HP`); updateSidebar();
+}
+
+function resetAll() {
+  ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions;
+  ps.hints=campaign.partyHints; ps.round=1; updateSidebar(); notify('Reset!');
+}
+
+// ==================== EDIT ====================
+function getOrder() {
+  const keys = Object.keys(campaign.scenes);
+  // Fjern duplikater og slettede scener
+  const seen = new Set();
+  campaign.sceneOrder = (campaign.sceneOrder||[]).filter(id => {
+    if (!campaign.scenes[id] || seen.has(id)) return false;
+    seen.add(id); return true;
+  });
+  // Legg til nye scener som mangler i order
+  keys.forEach(id => { if (!seen.has(id)) campaign.sceneOrder.push(id); });
+  return campaign.sceneOrder;
+}
+
+function renderSceneList() {
+  const d = document.getElementById('slItems'); d.innerHTML='';
+  const order = getOrder();
+  order.forEach((id, idx) => {
+    const s = campaign.scenes[id];
+    const el = document.createElement('div');
+    el.className = 'sl-item'+(editSel===id?' sel':'');
+    el.innerHTML = `
+      <div class="sl-item-info">
+        <div class="sl-item-title">${s.emoji||''} ${s.title||'Uten tittel'}</div>
+        <div class="sl-item-type">${TLABEL[s.type]||'SCENE'}${id===campaign.startScene?' ⭐':''}</div>
+      </div>
+      <div class="sl-item-btns">
+        <button class="sl-ibtn" title="Flytt opp" onclick="moveScene('${id}',-1,event)">↑</button>
+        <button class="sl-ibtn" title="Flytt ned" onclick="moveScene('${id}',1,event)">↓</button>
+        <button class="sl-ibtn" title="Kopier scene" onclick="duplicateScene('${id}',event)">⧉</button>
+      </div>`;
+    el.onclick = () => { editSel=id; renderSceneList(); renderEditPanel(); };
+    d.appendChild(el);
+  });
+}
+
+function addScene() {
+  const id = uid();
+  campaign.scenes[id] = {
+    title:'Ny scene', type:'story', emoji:'📖', text:'', hint:'',
+    imageUrl:'', videoUrl:'', musicUrl:'', arrivalSoundUrl:'',
+    startFullscreen:false, choices:[],
+    thresholds:{low:14,mid:29}, bossName:'Bossen', bossEmoji:'👹',
+    bossMaxHp:100, bossDamage:15, partyDamage:20, partyCritDamage:40,
+    winChoices:[], loseChoices:[],
+    songs:[], medleyThreshold:10,
+    questions:[], dmgPerWrong:10, rewardPerCorrect:0, rewardType:'hp',
+    countdownSeconds:60,
+    wsWords:[], wsSecret:'', wsSize:12,
+    memIconCount:10, memGridSize:50, memShowTime:5, memDmgPerWrong:10
+  };
+  if (!campaign.startScene) campaign.startScene = id;
+  getOrder(); // adds id to end of sceneOrder
+  editSel = id; renderSceneList(); renderEditPanel();
+  autosave();
+}
+
+function duplicateScene(id, e) {
+  if (e) e.stopPropagation();
+  const src = campaign.scenes[id];
+  if (!src) return;
+  const newId = uid();
+  campaign.scenes[newId] = JSON.parse(JSON.stringify(src)); // deep copy
+  campaign.scenes[newId].title = (src.title||'Scene') + ' (kopi)';
+  // Insert right after the original in order
+  const order = getOrder();
+  const idx = order.indexOf(id);
+  campaign.sceneOrder.splice(idx+1, 0, newId);
+  editSel = newId;
+  renderSceneList(); renderEditPanel();
+  autosave();
+  notify('Scene kopiert!');
+}
+
+function moveScene(id, dir, e) {
+  if (e) e.stopPropagation();
+  const order = getOrder();
+  const idx = order.indexOf(id);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= order.length) return;
+  // Swap
+  [campaign.sceneOrder[idx], campaign.sceneOrder[newIdx]] = [campaign.sceneOrder[newIdx], campaign.sceneOrder[idx]];
+  renderSceneList();
+  autosave();
+}
+
+function sceneOpts(sel) {
+  return Object.keys(campaign.scenes).map(id=>`<option value="${id}" ${sel===id?'selected':''}>${(campaign.scenes[id].title||id).replace(/"/g,'&quot;')}</option>`).join('');
+}
+
+// Safe edit helpers — avoids quote-escaping bugs in inline HTML handlers
+function eSet(sid, field, value) {
+  if (!campaign.scenes[sid]) return;
+  campaign.scenes[sid][field] = value;
+  if (field==='title') renderSceneList();
+  if (field==='type') renderEditPanel();
+}
+function eSetNested(sid, arr, idx, field, value) {
+  if (!campaign.scenes[sid]) return;
+  if (!campaign.scenes[sid][arr]) campaign.scenes[sid][arr]=[];
+  if (!campaign.scenes[sid][arr][idx]) campaign.scenes[sid][arr][idx]={};
+  campaign.scenes[sid][arr][idx][field] = value;
+}
+function eSetDeep(sid, field, sub, value) {
+  if (!campaign.scenes[sid]) return;
+  if (!campaign.scenes[sid][field]) campaign.scenes[sid][field]={};
+  campaign.scenes[sid][field][sub] = value;
+}
+function eSplice(sid, arr, idx) {
+  if (!campaign.scenes[sid]||!campaign.scenes[sid][arr]) return;
+  campaign.scenes[sid][arr].splice(idx,1); renderEditPanel();
+}
+function ePush(sid, arr, val) {
+  if (!campaign.scenes[sid]) return;
+  if (!campaign.scenes[sid][arr]) campaign.scenes[sid][arr]=[];
+  campaign.scenes[sid][arr].push(val); renderEditPanel();
+}
+function eSetArr(sid, arr, idx, value) {
+  if (!campaign.scenes[sid]) return;
+  if (!campaign.scenes[sid][arr]) campaign.scenes[sid][arr]=[];
+  campaign.scenes[sid][arr][idx] = value;
+}
+function eSetStart(sid) {
+  campaign.startScene=sid; renderSceneList(); renderEditPanel();
+}
+
+function setField(key, val) {
+  if (!campaign.scenes[editSel]) { console.warn('setField: editSel invalid', editSel); return; }
+  campaign.scenes[editSel][key] = val;
+  console.log('setField', key, '=', val, 'on', editSel);
+  dbg('Lagret: '+key+' = '+val);
+  if (key==='title') renderSceneList();
+  if (key==='type')  { renderEditPanel(); }
+}
+function setDeep(field, sub, val) {
+  if (!campaign.scenes[editSel]) return;
+  if (!campaign.scenes[editSel][field]) campaign.scenes[editSel][field]={};
+  campaign.scenes[editSel][field][sub] = val;
+  console.log('setDeep', field+'.'+sub, '=', val);
+}
+function setNested(arr, idx, key, val) {
+  if (!campaign.scenes[editSel]) { console.warn('setNested: editSel invalid', editSel); return; }
+  if (!campaign.scenes[editSel][arr]) campaign.scenes[editSel][arr]=[];
+  if (!campaign.scenes[editSel][arr][idx]) campaign.scenes[editSel][arr][idx]={};
+  campaign.scenes[editSel][arr][idx][key] = val;
+  console.log('setNested', arr+'['+idx+'].'+key, '=', val, 'on', editSel);
+  dbg('Lagret: '+arr+'['+idx+'].'+key+' = '+val);
+}
+function setArrItem(arr, idx, val) {
+  if (!campaign.scenes[editSel]) return;
+  if (!campaign.scenes[editSel][arr]) campaign.scenes[editSel][arr]=[];
+  campaign.scenes[editSel][arr][idx] = val;
+  console.log('setArrItem', arr+'['+idx+']', '=', val);
+}
+function pushItem(arr, val) {
+  if (!campaign.scenes[editSel]) return;
+  if (!campaign.scenes[editSel][arr]) campaign.scenes[editSel][arr]=[];
+  campaign.scenes[editSel][arr].push(val);
+  console.log('pushItem', arr, 'now has', campaign.scenes[editSel][arr].length, 'items');
+  renderEditPanel();
+}
+function spliceItem(arr, idx) {
+  if (!campaign.scenes[editSel]) return;
+  campaign.scenes[editSel][arr].splice(idx,1);
+  console.log('spliceItem', arr, idx);
+  renderEditPanel();
+}
+function setGlobal(key, val) { campaign[key] = isNaN(val) ? val : (parseFloat(val)||0); }
+function dbg(msg) {
+  const el = document.getElementById('dbgBar');
+  if (el) { el.textContent = msg; el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2000); }
+}
+
+function renderEditPanel() {
+  const panel = document.getElementById('editPanel');
+  const id = editSel;
+  if (!id||!campaign.scenes[id]) {
+    panel.innerHTML='<div class="no-sel"><div class="big">📜</div><p>Velg eller opprett en scene</p></div>';
+    return;
+  }
+  const s = campaign.scenes[id];
+  const isStart = campaign.startScene===id;
+
+  const scOpts = (sel) => Object.keys(campaign.scenes).map(sid=>
+    `<option value="${sid}" ${sel===sid?'selected':''}>${campaign.scenes[sid].title||sid}</option>`
+  ).join('');
+
+  const f = (label, html) => `<div class="fr"><label>${label}</label>${html}</div>`;
+  const inp = (key, val, extra='') =>
+    `<input class="fi" value="${String(val||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" oninput="setField('${key}',this.value)" ${extra}>`;
+  const ta = (key, val, extra='') =>
+    `<textarea class="fi ft" oninput="setField('${key}',this.value)" ${extra}>${String(val||'').replace(/</g,'&lt;')}</textarea>`;
+
+  const choiceRow = (arr, c, i, showOutcome) => `
+    <div class="ce-row">
+      <input class="fi" value="${String(c.label||'').replace(/"/g,'&quot;')}" placeholder="Tekst..." oninput="setNested('${arr}',${i},'label',this.value)">
+      <select class="fs" style="width:110px" onchange="setNested('${arr}',${i},'target',this.value)">
+        <option value="">— Scene —</option>${scOpts(c.target)}
+      </select>
+      ${showOutcome?`<select class="fs" style="width:76px" onchange="setNested('${arr}',${i},'outcome',this.value)">
+        <option value="low" ${c.outcome==='low'?'selected':''}>Lavt</option>
+        <option value="mid" ${c.outcome==='mid'?'selected':''}>Midt</option>
+        <option value="high" ${c.outcome==='high'?'selected':''}>Høyt</option>
+        <option value="all" ${c.outcome==='all'?'selected':''}>Alle</option>
+      </select>`:''}
+      <button class="del-btn" onclick="spliceItem('${arr}',${i})">✕</button>
+    </div>`;
+
+  const choicesBlock = (arr, showOutcome) => (s[arr]||[]).map((c,i)=>choiceRow(arr,c,i,showOutcome)).join('');
+
+  const quizBlock = () => (s.questions||[]).map((q,i)=>`
+    <div style="display:flex;flex-direction:column;gap:5px;padding:10px;background:rgba(10,6,3,.6);border:1px solid var(--border);border-radius:2px;margin-bottom:8px">
+      <div style="display:flex;gap:6px">
+        <input class="fi" value="${String(q.question||'').replace(/"/g,'&quot;')}" placeholder="Spørsmål..." oninput="setNested('questions',${i},'question',this.value)">
+        <button class="del-btn" onclick="spliceItem('questions',${i})">✕</button>
+      </div>
+      <input class="fi" value="${String(q.imageUrl||'').replace(/"/g,'&quot;')}" placeholder="Bilde URL (valgfritt)" oninput="setNested('questions',${i},'imageUrl',this.value)">
+      <input class="fi" value="${String(q.hint||'').replace(/"/g,'&quot;')}" placeholder="🧪 Hint (valgfritt — vises kun når DM klikker VIS HINT)" oninput="setNested('questions',${i},'hint',this.value)">
+    </div>`).join('');
+
+  const songsBlock = () => {
+    const hdr = `<div class="song-row" style="border:none;background:transparent;padding:2px 6px"><span></span><span class="col-hdr">TITTEL</span><span class="col-hdr">URL MP3</span><span class="col-hdr">START(s)</span><span class="col-hdr">VAR(s)</span><span></span></div>`;
+    return hdr + (s.songs||[]).map((song,i)=>`
+      <div style="background:rgba(10,6,3,.6);border:1px solid var(--border);border-radius:2px;padding:7px;margin-bottom:6px;display:flex;flex-direction:column;gap:5px">
+        <div class="song-row" style="background:none;border:none;padding:0;margin:0">
+          <span class="song-num">${i+1}</span>
+          <input class="fi" value="${String(song.title||'').replace(/"/g,'&quot;')}" placeholder="Tittel" oninput="setNested('songs',${i},'title',this.value)">
+          <input class="fi" value="${String(song.url||'').replace(/"/g,'&quot;')}" placeholder="https://..." oninput="setNested('songs',${i},'url',this.value)">
+          <input class="fi" type="number" value="${song.startSec||0}" oninput="setNested('songs',${i},'startSec',this.value)">
+          <input class="fi" type="number" value="${song.duration||2}" oninput="setNested('songs',${i},'duration',this.value)">
+          <button class="del-btn" onclick="spliceItem('songs',${i})">✕</button>
+        </div>
+        <input class="fi" value="${String(song.hint||'').replace(/"/g,'&quot;')}" placeholder="🧪 Hint per sang (valgfritt)" oninput="setNested('songs',${i},'hint',this.value)">
+      </div>`).join('');
+  };
+
+  const wsBlock = () => (s.wsWords||[]).map((w,i)=>`
+    <div class="ws-word-row">
+      <input class="fi" value="${String(w||'').replace(/"/g,'&quot;')}" placeholder="ORD" oninput="setArrItem('wsWords',${i},this.value.toUpperCase())">
+      <button class="del-btn" onclick="spliceItem('wsWords',${i})">✕</button>
+    </div>`).join('');
+
+  const types = {story:'📖 Fortellingsscene',choice:'🗺 Veivalg',roll:'🎲 Terningkast',
+    boss:'👹 Boss-kamp',medley:'🎵 Musikk-boss',quiz:'❓ Quiz',
+    countdown:'⏱ Nedtelling',wordsearch:'🔤 Bokstavbrett',memory:'🧠 Huskeliste'};
+
+  panel.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+      <span style="font-family:'Cinzel',serif;font-size:9px;color:var(--text2);letter-spacing:2px;flex:1">REDIGER SCENE</span>
+      <button class="set-start-btn ${isStart?'is-start':''}" onclick="campaign.startScene='${id}';renderSceneList();renderEditPanel()">${isStart?'⭐ STARTSCENE':'Sett som start'}</button>
+      <button class="preview-btn" onclick="previewScene('${id}')">▶ FORHÅNDSVIS</button>
+    </div>
+    <div class="es"><h3>GRUNNINFO</h3>
+      ${f('TITTEL', inp('title', s.title))}
+      <div class="fr"><label>TYPE</label>
+        <select class="fs" onchange="setField('type',this.value)">
+          ${Object.entries(types).map(([v,t])=>`<option value="${v}" ${s.type===v?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      ${f('EMOJI', inp('emoji', s.emoji))}
+      ${f('TEKST', ta('text', s.text))}
+      ${f('🧪 HINT', ta('hint', s.hint, 'style="min-height:44px"'))}
+    </div>
+    <div class="es"><h3>MEDIA</h3>
+      <div class="hint-note" style="margin-bottom:10px">Last opp lokale filer (🖼/🎵/🔊) for å pakke dei med i ZIP-eksport. Eller lim inn URL.</div>
+      <div class="fr"><label>BILDE URL</label><div style="display:flex;gap:6px">
+        ${inp('imageUrl', s.imageUrl, 'placeholder="https://..."')}
+        <label style="cursor:pointer;background:rgba(200,150,40,.15);border:1px solid var(--border2);color:var(--gold);border-radius:2px;padding:7px 10px;font-size:11px;white-space:nowrap;flex-shrink:0">🖼<input type="file" accept="image/*" style="display:none" onchange="uploadAsset(event,'imageUrl')"></label>
+      </div></div>
+      ${f('VIDEO URL', inp('videoUrl', s.videoUrl, 'placeholder="https://youtube.com/..."'))}
+      <div class="fr"><label>MUSIKK URL (looper)</label><div style="display:flex;gap:6px">
+        ${inp('musicUrl', s.musicUrl, 'placeholder="https://..."')}
+        <label style="cursor:pointer;background:rgba(200,150,40,.15);border:1px solid var(--border2);color:var(--gold);border-radius:2px;padding:7px 10px;font-size:11px;white-space:nowrap;flex-shrink:0">🎵<input type="file" accept="audio/*" style="display:none" onchange="uploadAsset(event,'musicUrl')"></label>
+      </div></div>
+      <div class="fr"><label>ANKOMST-LYD URL (én gang)</label><div style="display:flex;gap:6px">
+        ${inp('arrivalSoundUrl', s.arrivalSoundUrl, 'placeholder="https://..."')}
+        <label style="cursor:pointer;background:rgba(200,150,40,.15);border:1px solid var(--border2);color:var(--gold);border-radius:2px;padding:7px 10px;font-size:11px;white-space:nowrap;flex-shrink:0">🔊<input type="file" accept="audio/*" style="display:none" onchange="uploadAsset(event,'arrivalSoundUrl')"></label>
+      </div></div>
+      <div class="fr"><label>START I FULLSKJERM</label>
+        <select class="fs" onchange="setField('startFullscreen',this.value==='true')">
+          <option value="false" ${!s.startFullscreen?'selected':''}>Nei — split-visning</option>
+          <option value="true" ${s.startFullscreen?'selected':''}>Ja — fullskjerm bilde/video</option>
+        </select>
+      </div>
+    </div>
+    ${s.type==='story'||s.type==='choice'?`<div class="es"><h3>VALG / UTGANGER</h3>
+      ${choicesBlock('choices',false)}
+      <button class="add-choice-btn" onclick="pushItem('choices',{label:'',target:''})">+ LEGG TIL VALG</button>
+    </div>`:''}
+    ${s.type==='roll'?`<div class="es"><h3>KAST-GRENSER</h3>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+        <span style="color:var(--text2);font-size:12px">Lavt ≤</span>
+        <input class="fi" type="number" style="width:64px" value="${(s.thresholds||{}).low||14}" oninput="setDeep('thresholds','low',this.value)">
+        <span style="color:var(--text2);font-size:12px">Midt ≤</span>
+        <input class="fi" type="number" style="width:64px" value="${(s.thresholds||{}).mid||29}" oninput="setDeep('thresholds','mid',this.value)">
+      </div>
+      ${choicesBlock('choices',true)}
+      <button class="add-choice-btn" onclick="pushItem('choices',{label:'',target:'',outcome:'low'})">+ LEGG TIL VALG</button>
+    </div>`:''}
+    ${s.type==='boss'?`<div class="es"><h3>BOSS</h3>
+      <div class="grid2">
+        ${f('NAVN', inp('bossName', s.bossName))}
+        ${f('EMOJI', inp('bossEmoji', s.bossEmoji))}
+        ${f('MAX HP', inp('bossMaxHp', s.bossMaxHp, 'type="number"'))}
+        ${f('BOSS SKADE', inp('bossDamage', s.bossDamage, 'type="number"'))}
+        ${f('PARTI TREFF', inp('partyDamage', s.partyDamage, 'type="number"'))}
+        ${f('PARTI KRIT', inp('partyCritDamage', s.partyCritDamage, 'type="number"'))}
+      </div>
+      <div class="fr"><label>KAST-GRENSER</label><div style="display:flex;gap:10px;align-items:center">
+        <span style="color:var(--text2);font-size:12px">Lavt ≤</span>
+        <input class="fi" type="number" style="width:64px" value="${(s.thresholds||{}).low||14}" oninput="setDeep('thresholds','low',this.value)">
+        <span style="color:var(--text2);font-size:12px">Midt ≤</span>
+        <input class="fi" type="number" style="width:64px" value="${(s.thresholds||{}).mid||29}" oninput="setDeep('thresholds','mid',this.value)">
+      </div></div>
+      <h3 style="margin-top:10px">VED SEIER</h3>${choicesBlock('winChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('winChoices',{label:'',target:''})">+ VED SEIER</button>
+      <h3 style="margin-top:8px">VED NEDERLAG</h3>${choicesBlock('loseChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('loseChoices',{label:'',target:''})">+ VED NEDERLAG</button>
+    </div>`:''}
+    ${s.type==='quiz'?`<div class="es"><h3>QUIZ</h3>
+      <div class="grid2">
+        ${f('SKADE VED FEIL (HP)', inp('dmgPerWrong', s.dmgPerWrong, 'type="number"'))}
+        ${f('BELØNNING VED RIKTIG', inp('rewardPerCorrect', s.rewardPerCorrect, 'type="number"'))}
+        ${f('KRAV FOR SEIER (antall riktige)', inp('winThreshold', s.winThreshold||0, 'type="number" placeholder="0 = automatisk 50%"'))}
+        <div class="fr"><label>BELØNNINGSTYPE</label><select class="fs" onchange="setField('rewardType',this.value)">
+          <option value="hp" ${s.rewardType==='hp'?'selected':''}>+ HP</option>
+          <option value="potion" ${s.rewardType==='potion'?'selected':''}>+ Potion</option>
+        </select></div>
+      </div>
+      <h3 style="margin-top:10px">SPØRSMÅL</h3>${quizBlock()}
+      <button class="add-choice-btn" onclick="pushItem('questions',{question:'',imageUrl:''})">+ LEGG TIL SPØRSMÅL</button>
+      <h3 style="margin-top:10px">VED SEIER (≥50%)</h3>${choicesBlock('winChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('winChoices',{label:'',target:''})">+ VED SEIER</button>
+      <h3 style="margin-top:8px">VED NEDERLAG</h3>${choicesBlock('loseChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('loseChoices',{label:'',target:''})">+ VED NEDERLAG</button>
+    </div>`:''}
+    ${s.type==='countdown'?`<div class="es"><h3>NEDTELLING</h3>
+      ${f('ANTALL SEKUNDER', inp('countdownSeconds', s.countdownSeconds, 'type="number"'))}
+      <h3 style="margin-top:10px">NÅR TIDEN ER UTE</h3>${choicesBlock('choices',false)}
+      <button class="add-choice-btn" onclick="pushItem('choices',{label:'',target:''})">+ UTGANG</button>
+    </div>`:''}
+    ${s.type==='wordsearch'?`<div class="es"><h3>BOKSTAVBRETT</h3>
+      ${f('BRETTSTØRRELSE (NxN)', inp('wsSize', s.wsSize, 'type="number"'))}
+      ${f('HEMMELIG SETNING', inp('wsSecret', s.wsSecret, 'placeholder="Avsløres når alle ord er funnet"'))}
+      <h3 style="margin-top:10px">ORD</h3>${wsBlock()}
+      <button class="add-choice-btn" onclick="pushItem('wsWords','')">+ LEGG TIL ORD</button>
+      <h3 style="margin-top:10px">NÅR ALLE ORD FUNNET</h3>${choicesBlock('winChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('winChoices',{label:'',target:''})">+ UTGANG</button>
+    </div>`:''}
+    ${s.type==='memory'?`<div class="es"><h3>HUSKELISTE</h3>
+      <div class="grid2">
+        ${f('IKONER Å HUSKE', inp('memIconCount', s.memIconCount, 'type="number"'))}
+        ${f('IKONER I BRETT', inp('memGridSize', s.memGridSize, 'type="number"'))}
+        ${f('VISNINGSTID (SEK)', inp('memShowTime', s.memShowTime, 'type="number"'))}
+        ${f('SKADE VED FEIL (HP)', inp('memDmgPerWrong', s.memDmgPerWrong, 'type="number"'))}
+      </div>
+      <h3 style="margin-top:10px">NÅR ALLE IKONER FUNNET</h3>${choicesBlock('winChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('winChoices',{label:'',target:''})">+ UTGANG</button>
+    </div>`:''}
+    ${s.type==='medley'?`<div class="es"><h3>MUSIKK-BOSS</h3>
+      ${f('KRAV FOR SEIER (riktige)', inp('medleyThreshold', s.medleyThreshold, 'type="number"'))}
+      <h3 style="margin-top:10px">SANGER</h3>${songsBlock()}
+      <button class="add-choice-btn" onclick="pushItem('songs',{title:'',url:'',startSec:0,duration:2})">+ LEGG TIL SANG</button>
+      <h3 style="margin-top:10px">VED SEIER</h3>${choicesBlock('winChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('winChoices',{label:'',target:''})">+ VED SEIER</button>
+      <h3 style="margin-top:8px">VED NEDERLAG</h3>${choicesBlock('loseChoices',false)}
+      <button class="add-choice-btn" onclick="pushItem('loseChoices',{label:'',target:''})">+ VED NEDERLAG</button>
+    </div>`:''}
+    <div class="es"><h3>GLOBALE INNSTILLINGER</h3>
+      <div class="grid2">
+        <div class="fr"><label>PARTI MAX HP</label><input class="fi" type="number" value="${campaign.partyMaxHp}" oninput="setGlobal('partyMaxHp',this.value)"></div>
+        <div class="fr"><label>START POTIONS</label><input class="fi" type="number" value="${campaign.partyPotions}" oninput="setGlobal('partyPotions',this.value)"></div>
+        <div class="fr"><label>START ELIKSIR</label><input class="fi" type="number" value="${campaign.partyHints}" oninput="setGlobal('partyHints',this.value)"></div>
+        <div class="fr"><label>HP PER POTION</label><input class="fi" type="number" value="${campaign.potionHeal||20}" oninput="setGlobal('potionHeal',this.value)"></div>
+      </div>
+      <div class="fr" style="margin-top:4px"><label>SCENESKIFTE-LYD URL</label>
+        <input class="fi" value="${campaign.transitionSoundUrl||''}" placeholder="https://..." oninput="setGlobal('transitionSoundUrl',this.value)">
+      </div>
+      <div class="fr" style="margin-top:4px"><label>💀 DØDSCENE (mål for Død-knappen)</label>
+        <select class="fs" onchange="setGlobal('deathScene',this.value)">
+          <option value="">— Velg scene —</option>
+          ${Object.keys(campaign.scenes).map(sid=>`<option value="${sid}" ${campaign.deathScene===sid?'selected':''}>${campaign.scenes[sid].title||sid}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="edit-actions">
+      <button class="del-scene-btn" onclick="deleteScene('${id}')">SLETT SCENE</button>
+    </div>`;
+}
+
+
+
+function previewScene(id) {
+  ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints;
+  switchMode('play'); loadScene(id);
+}
+
+function deleteScene(id) {
+  if (!confirm('Slett denne scenen?')) return;
+  delete campaign.scenes[id];
+  campaign.sceneOrder = (campaign.sceneOrder||[]).filter(x => x !== id);
+  if (campaign.startScene===id) campaign.startScene=getOrder()[0]||null;
+  editSel=null; renderSceneList(); renderEditPanel();
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(campaign,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='game-over-kampanje.json'; a.click(); notify('Kampanje eksportert!');
+}
+
+async function exportZip() {
+  if (typeof JSZip === 'undefined') { notify('JSZip ikke lastet — sjekk internettforbindelse.'); return; }
+  notify('📦 Bygger ZIP-fil...', 5000);
+
+  const zip = new JSZip();
+  const assets = zip.folder('assets');
+  const campaignCopy = JSON.parse(JSON.stringify(campaign));
+
+  // Extract base64 data-URIs — these are locally uploaded files we CAN pack
+  const urlMap = {}; // originalDataUri -> assets/filename
+  let packed = 0, external = 0;
+
+  function processUrl(url) {
+    if (!url) return url;
+    if (url.startsWith('data:')) {
+      if (urlMap[url]) return urlMap[url]; // already processed
+      const mime = url.match(/data:([^;]+);/)?.[1] || 'application/octet-stream';
+      const ext = guessExt(mime);
+      const filename = `asset_${packed+1}${ext}`;
+      const b64 = url.split(',')[1];
+      assets.file(filename, b64, {base64:true});
+      urlMap[url] = 'assets/' + filename;
+      packed++;
+      return 'assets/' + filename;
+    }
+    // External URL — keep as-is, count it
+    if (url.startsWith('http')) external++;
+    return url;
+  }
+
+  const urlFields = ['imageUrl','videoUrl','musicUrl','arrivalSoundUrl'];
+  if (campaignCopy.transitionSoundUrl) campaignCopy.transitionSoundUrl = processUrl(campaignCopy.transitionSoundUrl);
+  Object.values(campaignCopy.scenes).forEach(s => {
+    urlFields.forEach(f => { if(s[f]) s[f] = processUrl(s[f]); });
+    (s.songs||[]).forEach(song => { if(song.url) song.url = processUrl(song.url); });
+    (s.questions||[]).forEach(q => { if(q.imageUrl) q.imageUrl = processUrl(q.imageUrl); });
+  });
+
+  zip.file('kampanje.json', JSON.stringify(campaignCopy, null, 2));
+  zip.file('LES_MEG.txt',
+`GAME OVER — Kampanjepakke
+==========================
+Pakket inn: ${packed} lokale filer (i assets/-mappen)
+Eksterne URLer: ${external} (disse trenger internett)
+
+Slik bruker du pakken:
+1. Pakk ut ZIP-en til en mappe
+2. Legg game-over.html i samme mappe
+3. Åpne game-over.html i Chrome
+4. Klikk IMPORTER og velg kampanje.json
+
+Tips: Bruk "Last opp fil"-knappen i editoren (🖼) for å laste opp
+bilder/lyd lokalt — da pakkes de automatisk med i ZIP-en.
+`);
+
+  const content = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(content);
+  a.download = 'game-over-pakke.zip';
+  a.click();
+  notify(`📦 ZIP klar! ${packed} filer pakket, ${external} eksterne URLer beholdt.`, 5000);
+}
+
+function guessExt(mimeType) {
+  const map = {'image/jpeg':'.jpg','image/png':'.png','image/gif':'.gif','image/webp':'.webp',
+    'audio/mpeg':'.mp3','audio/ogg':'.ogg','audio/wav':'.wav','video/mp4':'.mp4'};
+  return map[mimeType] || '';
+}
+
+function uploadAsset(event, field) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    setField(field, e.target.result);
+    renderEditPanel();
+    notify(`✓ ${file.name} lastet opp!`);
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleImport(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      campaign = JSON.parse(ev.target.result);
+      if (!campaign.sceneOrder) campaign.sceneOrder = [];
+      if (!campaign.name) campaign.name = file.name.replace('.json','');
+      getOrder();
+      ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints||2;
+      // Register as new or overwrite active campaign
+      let id = getActiveCampaignId() || ('camp_' + Date.now());
+      setActiveCampaignId(id);
+      const index = getCampaignIndex();
+      const existing = index.find(c => c.id === id);
+      if (existing) { existing.name = campaign.name; existing.updated = Date.now(); }
+      else { index.unshift({id, name: campaign.name, updated: Date.now()}); }
+      saveCampaignIndex(index);
+      localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
+      editSel=null; renderSceneList(); renderEditPanel(); updateSidebar();
+      notify('Kampanje importert: ' + campaign.name);
+    } catch { notify('Feil: ugyldig JSON-fil'); }
+  };
+  r.readAsText(file); e.target.value='';
+}
+
+// ===== AUTOSAVE =====
+const CAMPAIGNS_INDEX_KEY = 'gameOver_campaigns'; // list of {id, name, updated}
+const ACTIVE_KEY = 'gameOver_activeCampaign';   // currently active campaign id
+
+function getCampaignIndex() {
+  try { return JSON.parse(localStorage.getItem(CAMPAIGNS_INDEX_KEY)) || []; } catch { return []; }
+}
+function saveCampaignIndex(index) {
+  try { localStorage.setItem(CAMPAIGNS_INDEX_KEY, JSON.stringify(index)); } catch(e) {}
+}
+function getActiveCampaignId() {
+  try { return localStorage.getItem(ACTIVE_KEY) || null; } catch { return null; }
+}
+function setActiveCampaignId(id) {
+  try { localStorage.setItem(ACTIVE_KEY, id); } catch(e) {}
+}
+
+function autosave() {
+  try {
+    let id = getActiveCampaignId();
+    if (!id) {
+      // First time — create default campaign
+      id = 'camp_' + Date.now();
+      setActiveCampaignId(id);
+      const index = getCampaignIndex();
+      index.unshift({id, name: campaign.name || 'Min kampanje', updated: Date.now()});
+      saveCampaignIndex(index);
+    } else {
+      // Update timestamp in index
+      const index = getCampaignIndex();
+      const entry = index.find(c => c.id === id);
+      if (entry) { entry.updated = Date.now(); entry.name = campaign.name || entry.name; }
+      saveCampaignIndex(index);
+    }
+    localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
+    const el = document.getElementById('saveIndicator');
+    if (el) { el.textContent = '💾 Lagret ' + new Date().toLocaleTimeString('no'); el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2500); }
+  } catch(e) {}
+}
+
+function autoload() {
+  try {
+    const id = getActiveCampaignId();
+    if (id) {
+      const saved = localStorage.getItem('gameOver_camp_' + id);
+      if (saved) {
+        campaign = JSON.parse(saved);
+        if (!campaign.sceneOrder) campaign.sceneOrder = [];
+        getOrder();
+        ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints||2;
+        updateSidebar();
+        notify('💾 ' + (campaign.name||'Kampanje') + ' lastet inn!', 3000);
+        return true;
+      }
+    }
+    // No active campaign — check if any exist
+    const index = getCampaignIndex();
+    if (index.length > 0) {
+      setActiveCampaignId(index[0].id);
+      return autoload();
+    }
+  } catch(e) {}
+  return false;
+}
+
+function clearSave() {
+  if (!confirm('Slette DENNE kampanjen fra nettleseren?')) return;
+  const id = getActiveCampaignId();
+  if (id) {
+    localStorage.removeItem('gameOver_camp_' + id);
+    const index = getCampaignIndex().filter(c => c.id !== id);
+    saveCampaignIndex(index);
+    localStorage.removeItem(ACTIVE_KEY);
+  }
+  notify('Kampanje slettet.');
+  // Load another if exists
+  if (!autoload()) {
+    campaign = {startScene:null,partyMaxHp:100,partyPotions:3,partyHints:2,potionHeal:20,transitionSoundUrl:'',deathScene:'',sceneOrder:[],scenes:{},name:'Ny kampanje'};
+    renderSceneList(); renderEditPanel();
+  }
+}
+
+// ===== CAMPAIGN MANAGER =====
+function openCampaignManager() {
+  try {
+    renderCampaignList();
+  } catch(e) {
+    console.error('Campaign list error:', e);
+  }
+  document.getElementById('campaignModal').style.display = 'flex';
+}
+function closeCampaignManager() {
+  document.getElementById('campaignModal').style.display = 'none';
+}
+
+function renderCampaignList() {
+  const list = document.getElementById('campaignList');
+  const index = getCampaignIndex();
+  const activeId = getActiveCampaignId();
+  list.innerHTML = '';
+
+  // Show legacy restore button if old backup exists
+  const legacyDiv = document.getElementById('legacyRestore');
+  if (legacyDiv) legacyDiv.style.display = localStorage.getItem('gameOver_campaign') ? 'block' : 'none';
+
+  if (index.length === 0) {
+    list.innerHTML = '<div style="color:var(--text2);font-family:Cinzel,serif;font-size:11px;text-align:center;padding:20px">Ingen kampanjer ennå — lag en ny!</div>';
+    return;
+  }
+  index.forEach(entry => {
+    const isActive = entry.id === activeId;
+    const updated = entry.updated ? new Date(entry.updated).toLocaleDateString('no') : '';
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:10px 12px;background:${isActive?'rgba(200,150,40,.12)':'rgba(10,6,3,.6)'};border:1px solid ${isActive?'var(--gold)':'var(--border)'};border-radius:3px`;
+    row.innerHTML = `
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Cinzel',serif;font-size:12px;color:${isActive?'var(--gold2)':'var(--text)'}">${isActive?'⭐ ':''}${entry.name||'Uten navn'}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">Sist endret: ${updated}</div>
+      </div>
+      <button onclick="renameCampaign('${entry.id}')" style="background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:2px;padding:4px 8px;cursor:pointer;font-size:11px" title="Gi nytt navn">✏️</button>
+      ${!isActive?`<button onclick="switchCampaign('${entry.id}')" style="background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a0a06;border:none;border-radius:2px;padding:5px 12px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px">LAST INN</button>`:'<span style="font-family:Cinzel,serif;font-size:9px;color:var(--gold);letter-spacing:1px">AKTIV</span>'}
+      <button onclick="deleteCampaign('${entry.id}')" style="background:rgba(58,14,14,.8);border:1px solid var(--red);color:var(--red2);border-radius:2px;padding:4px 8px;cursor:pointer;font-size:11px" title="Slett">🗑</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function createNewCampaign() {
+  const nameInput = document.getElementById('newCampaignName');
+  const name = nameInput.value.trim() || 'Ny kampanje';
+  // Save current first
+  autosave();
+  // Create new blank campaign
+  const id = 'camp_' + Date.now();
+  campaign = {
+    name, startScene:null, partyMaxHp:100, partyPotions:3, partyHints:2,
+    potionHeal:20, transitionSoundUrl:'', deathScene:'', sceneOrder:[], scenes:{}
+  };
+  setActiveCampaignId(id);
+  const index = getCampaignIndex();
+  index.unshift({id, name, updated: Date.now()});
+  saveCampaignIndex(index);
+  localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
+  ps.partyHp=100; ps.potions=3; ps.hints=2;
+  editSel=null; renderSceneList(); renderEditPanel(); updateSidebar();
+  nameInput.value = '';
+  renderCampaignList();
+  notify('✓ Ny kampanje opprettet: ' + name);
+}
+
+function switchCampaign(id) {
+  autosave(); // save current first
+  setActiveCampaignId(id);
+  autoload();
+  renderSceneList(); renderEditPanel();
+  closeCampaignManager();
+}
+
+function renameCampaign(id) {
+  const index = getCampaignIndex();
+  const entry = index.find(c => c.id === id);
+  if (!entry) return;
+  const name = prompt('Nytt navn på kampanjen:', entry.name||'');
+  if (!name) return;
+  entry.name = name;
+  saveCampaignIndex(index);
+  if (id === getActiveCampaignId()) {
+    campaign.name = name;
+    autosave();
+  }
+  renderCampaignList();
+  notify('✓ Kampanje omdøpt!');
+}
+
+function restoreLegacy() {
+  const legacy = localStorage.getItem('gameOver_campaign');
+  if (!legacy) { notify('Ingen backup funnet.'); return; }
+  try {
+    const old = JSON.parse(legacy);
+    if (!old.name) old.name = 'Gjenopprettet kampanje';
+    const id = 'camp_' + Date.now();
+    old.sceneOrder = old.sceneOrder || [];
+    localStorage.setItem('gameOver_camp_' + id, JSON.stringify(old));
+    const index = getCampaignIndex();
+    index.unshift({id, name: old.name, updated: Date.now()});
+    saveCampaignIndex(index);
+    setActiveCampaignId(id);
+    campaign = old;
+    getOrder();
+    ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints||2;
+    editSel=null; renderSceneList(); renderEditPanel(); updateSidebar();
+    renderCampaignList();
+    notify('✓ Gammel kampanje gjenopprettet: ' + old.name);
+  } catch(e) { notify('Feil ved gjenoppretting.'); }
+}
+
+function deleteCampaign(id) {
+  const index = getCampaignIndex();
+  const entry = index.find(c => c.id === id);
+  if (!confirm(`Slette kampanjen "${entry?.name||id}"? Dette kan ikke angres.`)) return;
+  localStorage.removeItem('gameOver_camp_' + id);
+  const newIndex = index.filter(c => c.id !== id);
+  saveCampaignIndex(newIndex);
+  if (id === getActiveCampaignId()) {
+    localStorage.removeItem(ACTIVE_KEY);
+    if (newIndex.length > 0) { switchCampaign(newIndex[0].id); }
+    else {
+      campaign = {name:'Ny kampanje',startScene:null,partyMaxHp:100,partyPotions:3,partyHints:2,potionHeal:20,transitionSoundUrl:'',deathScene:'',sceneOrder:[],scenes:{}};
+      editSel=null; renderSceneList(); renderEditPanel();
+    }
+  }
+  renderCampaignList();
+  notify('Kampanje slettet.');
+}
+
+// Hook autosave into all edit functions
+const _origSetField = setField;
+window.setField = function(k,v){ _origSetField(k,v); autosave(); };
+const _origSetNested = setNested;
+window.setNested = function(a,i,k,v){ _origSetNested(a,i,k,v); autosave(); };
+const _origPushItem = pushItem;
+window.pushItem = function(a,v){ _origPushItem(a,v); autosave(); };
+const _origSpliceItem = spliceItem;
+window.spliceItem = function(a,i){ _origSpliceItem(a,i); autosave(); };
+const _origSetDeep = setDeep;
+window.setDeep = function(f,s,v){ _origSetDeep(f,s,v); autosave(); };
+const _origSetArrItem = setArrItem;
+window.setArrItem = function(a,i,v){ _origSetArrItem(a,i,v); autosave(); };
+const _origSetGlobal = setGlobal;
+window.setGlobal = function(k,v){ _origSetGlobal(k,v); autosave(); };
+
+// Also autosave on export (already explicit), import and addScene
+const _origAddScene = addScene;
+window.addScene = function(){ _origAddScene(); autosave(); };
+const _origDeleteScene = deleteScene;
+window.deleteScene = function(id){ _origDeleteScene(id); autosave(); };
+
+// INIT
+// Set copyright year
+const yr = new Date().getFullYear();
+document.querySelectorAll('#copyrightYear').forEach(el => el.textContent = '© ' + yr);
+document.querySelectorAll('.copyrightYearInline').forEach(el => el.textContent = yr);
+
+// Migrate old single-save format if present
+(function migrateLegacy() {
+  const legacy = localStorage.getItem('gameOver_campaign');
+  if (legacy && getCampaignIndex().length === 0) {
+    try {
+      const old = JSON.parse(legacy);
+      const id = 'camp_' + Date.now();
+      old.name = old.name || 'Kampanje (migrert)';
+      localStorage.setItem('gameOver_camp_' + id, JSON.stringify(old));
+      saveCampaignIndex([{id, name: old.name, updated: Date.now()}]);
+      setActiveCampaignId(id);
+      // Keep old key as backup — do NOT delete it
+      // localStorage.removeItem('gameOver_campaign'); 
+      console.log('Gammel kampanje migrert til nytt system. Original beholdt som backup.');
+    } catch(e) {}
+  }
+})();
+
+ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints;
+autoload();
+updateSidebar();
+</script>
+</body>
+</html>
