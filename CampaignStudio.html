@@ -505,6 +505,48 @@ html, body { width: 100%; height: 100%; background: var(--dark); overflow: hidde
 </style>
 </head>
 <body>
+<!-- PASSWORD SCREEN -->
+<div id="passwordScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0603,#1a0f0a);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px">
+  <div style="font-family:'Cinzel Decorative',serif;font-size:28px;color:#c9972a;letter-spacing:4px;text-shadow:0 0 30px rgba(200,150,40,.5)">⚔ CAMPAIGN STUDIO</div>
+  <div style="background:linear-gradient(135deg,#1a0f0a,#120a06);border:1px solid #5a3e1b;border-radius:6px;padding:32px;display:flex;flex-direction:column;gap:14px;min-width:300px;text-align:center">
+    <div style="font-family:'Cinzel',serif;font-size:12px;color:#8a6a30;letter-spacing:2px">TILGANGSKODE</div>
+    <input id="pwInput" type="password" placeholder="Skriv inn passord..." autofocus
+      style="background:rgba(10,6,3,.8);border:1px solid #5a3e1b;border-radius:3px;color:#e8d5a0;font-family:'Crimson Text',serif;font-size:16px;padding:10px 14px;text-align:center;outline:none"
+      onkeydown="if(event.key==='Enter') checkPassword()">
+    <button onclick="checkPassword()"
+      style="background:linear-gradient(180deg,#e8b84b,#c9972a);color:#1a0a06;border:none;border-radius:3px;padding:10px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;cursor:pointer">
+      LOGG INN
+    </button>
+    <div id="pwError" style="color:#e05050;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;display:none">Feil passord</div>
+  </div>
+  <div style="font-family:monospace;font-size:9px;color:#2a1a08">⚔ Campaign Studio © <span id="pwYear"></span></div>
+</div>
+
+<script>
+// ===== PASSWORD =====
+// Endre passordet her:
+const ACCESS_PASSWORD = 'FrodoCop1337';
+
+function checkPassword() {
+  const val = document.getElementById('pwInput').value;
+  if (val === ACCESS_PASSWORD) {
+    document.getElementById('passwordScreen').style.display = 'none';
+    sessionStorage.setItem('go_auth', '1');
+  } else {
+    const err = document.getElementById('pwError');
+    err.style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    setTimeout(() => err.style.display = 'none', 2000);
+  }
+}
+
+// Auto-unlock if already authenticated this session
+if (sessionStorage.getItem('go_auth') === '1') {
+  document.getElementById('passwordScreen').style.display = 'none';
+}
+document.getElementById('pwYear').textContent = new Date().getFullYear();
+</script>
 <canvas id="particles"></canvas>
 <div class="screen-flash" id="screenFlash"></div>
 <div class="scene-transition" id="sceneTransition"></div>
