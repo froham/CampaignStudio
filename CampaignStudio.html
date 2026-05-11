@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<title>⚔ GAME OVER</title>
+<title>⚔ Campaign Studio</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
 
@@ -525,7 +525,7 @@ html, body { width: 100%; height: 100%; background: var(--dark); overflow: hidde
 <script>
 // ===== PASSWORD =====
 // Endre passordet her:
-const ACCESS_PASSWORD = 'FrodoCop1337';
+const ACCESS_PASSWORD = 'kakem@nster';
 
 function checkPassword() {
   const val = document.getElementById('pwInput').value;
@@ -553,7 +553,7 @@ document.getElementById('pwYear').textContent = new Date().getFullYear();
 
 <div class="app">
   <div class="topnav">
-    <div class="game-title">⚔ GAME OVER <span id="copyrightYear" style="font-size:8px;opacity:.35;letter-spacing:1px;font-family:'Cinzel',serif;font-weight:400"></span></div>
+    <div class="game-title">⚔ Campaign Studio <span id="copyrightYear" style="font-size:8px;opacity:.35;letter-spacing:1px;font-family:'Cinzel',serif;font-weight:400"></span></div>
     <button class="nav-btn active" id="btnPlay" onclick="startGame()">SPILL</button>
     <button class="nav-btn" id="btnEdit" onclick="switchMode('edit')">REDIGER</button>
     <button class="nav-btn" id="btnUpdate" onclick="updatePlay()" style="background:rgba(80,160,80,.15);border-color:#4ab84a;color:#4ab84a">OPPDATER</button>
@@ -591,7 +591,7 @@ document.getElementById('pwYear').textContent = new Date().getFullYear();
         <button onclick="restoreLegacy()" style="display:block;width:100%;margin-top:8px;padding:7px;background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a0a06;border:none;border-radius:2px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px">GJENOPPRETT GAMMEL KAMPANJE</button>
       </div>
       <div style="font-family:monospace;font-size:10px;color:#3a2a10;text-align:center">
-        ⚔ Game Over Campaign Engine &copy; <span class="copyrightYearInline"></span>
+        ⚔ Campaign Studio &copy; <span class="copyrightYearInline"></span>
       </div>
     </div>
   </div>
@@ -2203,7 +2203,7 @@ function deleteScene(id) {
 function exportJSON() {
   const blob = new Blob([JSON.stringify(campaign,null,2)], {type:'application/json'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='game-over-kampanje.json'; a.click(); notify('Kampanje eksportert!');
+  a.download='kampanje.json'; a.click(); notify('Kampanje eksportert!');
 }
 
 async function exportZip() {
@@ -2246,15 +2246,15 @@ async function exportZip() {
 
   zip.file('kampanje.json', JSON.stringify(campaignCopy, null, 2));
   zip.file('LES_MEG.txt',
-`GAME OVER — Kampanjepakke
+`Campaign Studio — Kampanjepakke
 ==========================
 Pakket inn: ${packed} lokale filer (i assets/-mappen)
 Eksterne URLer: ${external} (disse trenger internett)
 
 Slik bruker du pakken:
 1. Pakk ut ZIP-en til en mappe
-2. Legg game-over.html i samme mappe
-3. Åpne game-over.html i Chrome
+2. Legg CampaignStudio.html i samme mappe
+3. Åpne CampaignStudio.html i Chrome
 4. Klikk IMPORTER og velg kampanje.json
 
 Tips: Bruk "Last opp fil"-knappen i editoren (🖼) for å laste opp
@@ -2264,7 +2264,7 @@ bilder/lyd lokalt — da pakkes de automatisk med i ZIP-en.
   const content = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(content);
-  a.download = 'game-over-pakke.zip';
+  a.download = 'campaign-studio-pakke.zip';
   a.click();
   notify(`📦 ZIP klar! ${packed} filer pakket, ${external} eksterne URLer beholdt.`, 5000);
 }
