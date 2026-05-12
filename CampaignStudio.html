@@ -505,46 +505,144 @@ html, body { width: 100%; height: 100%; background: var(--dark); overflow: hidde
 </style>
 </head>
 <body>
-<!-- PASSWORD SCREEN -->
-<div id="passwordScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0603,#1a0f0a);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px">
+<!-- SUPABASE AUTH SCREEN -->
+<div id="authScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#0a0603,#1a0f0a);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px">
   <div style="font-family:'Cinzel Decorative',serif;font-size:28px;color:#c9972a;letter-spacing:4px;text-shadow:0 0 30px rgba(200,150,40,.5)">⚔ CAMPAIGN STUDIO</div>
-  <div style="background:linear-gradient(135deg,#1a0f0a,#120a06);border:1px solid #5a3e1b;border-radius:6px;padding:32px;display:flex;flex-direction:column;gap:14px;min-width:300px;text-align:center">
-    <div style="font-family:'Cinzel',serif;font-size:12px;color:#8a6a30;letter-spacing:2px">TILGANGSKODE</div>
-    <input id="pwInput" type="password" placeholder="Skriv inn passord..." autofocus
-      style="background:rgba(10,6,3,.8);border:1px solid #5a3e1b;border-radius:3px;color:#e8d5a0;font-family:'Crimson Text',serif;font-size:16px;padding:10px 14px;text-align:center;outline:none"
-      onkeydown="if(event.key==='Enter') checkPassword()">
-    <button onclick="checkPassword()"
+  <div style="background:linear-gradient(135deg,#1a0f0a,#120a06);border:1px solid #5a3e1b;border-radius:6px;padding:32px;display:flex;flex-direction:column;gap:14px;min-width:320px;text-align:center">
+    <div id="authTitle" style="font-family:'Cinzel',serif;font-size:12px;color:#8a6a30;letter-spacing:2px">LOGG INN</div>
+    <input id="authEmail" type="email" placeholder="E-post..." autocomplete="email"
+      style="background:rgba(10,6,3,.8);border:1px solid #5a3e1b;border-radius:3px;color:#e8d5a0;font-family:'Crimson Text',serif;font-size:15px;padding:10px 14px;outline:none;text-align:center">
+    <input id="authPassword" type="password" placeholder="Passord..." autocomplete="current-password"
+      style="background:rgba(10,6,3,.8);border:1px solid #5a3e1b;border-radius:3px;color:#e8d5a0;font-family:'Crimson Text',serif;font-size:15px;padding:10px 14px;outline:none;text-align:center"
+      onkeydown="if(event.key==='Enter') authLogin()">
+    <div id="authConfirmWrap" style="display:none">
+      <input id="authConfirm" type="password" placeholder="Bekreft passord..."
+        style="background:rgba(10,6,3,.8);border:1px solid #5a3e1b;border-radius:3px;color:#e8d5a0;font-family:'Crimson Text',serif;font-size:15px;padding:10px 14px;outline:none;text-align:center;width:100%">
+    </div>
+    <button id="authBtn" onclick="authLogin()"
       style="background:linear-gradient(180deg,#e8b84b,#c9972a);color:#1a0a06;border:none;border-radius:3px;padding:10px;font-family:'Cinzel',serif;font-size:12px;letter-spacing:2px;cursor:pointer">
       LOGG INN
     </button>
-    <div id="pwError" style="color:#e05050;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;display:none">Feil passord</div>
+    <div id="authToggle" style="font-family:'Cinzel',serif;font-size:10px;color:#5a3e1b;cursor:pointer;letter-spacing:1px" onclick="toggleAuthMode()">
+      Har ikke konto? Registrer deg
+    </div>
+    <div id="authForgot" style="font-family:'Cinzel',serif;font-size:10px;color:#5a3e1b;cursor:pointer;letter-spacing:1px" onclick="authResetPassword()">
+      Glemt passord?
+    </div>
+    <div id="authError" style="color:#e05050;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;display:none;min-height:16px"></div>
+    <div id="authLoading" style="color:#8a6a30;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;display:none">Laster...</div>
   </div>
   <div style="font-family:monospace;font-size:9px;color:#2a1a08">⚔ Campaign Studio © <span id="pwYear"></span></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-// ===== PASSWORD =====
-// Endre passordet her:
-const ACCESS_PASSWORD = 'kakem@nster';
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://efwbdzrvaszefocqitpc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmd2JkenJ2YXN6ZWZvY3FpdHBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MTAwNzEsImV4cCI6MjA5NDE4NjA3MX0.rfmOq-HEVM3yNj4ve-eDtePfiioMhBT4cEOnRcn5f8E';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function checkPassword() {
-  const val = document.getElementById('pwInput').value;
-  if (val === ACCESS_PASSWORD) {
-    document.getElementById('passwordScreen').style.display = 'none';
-    sessionStorage.setItem('go_auth', '1');
-  } else {
-    const err = document.getElementById('pwError');
-    err.style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-    setTimeout(() => err.style.display = 'none', 2000);
+let currentUser = null;
+let authMode = 'login'; // 'login' or 'register'
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  const isReg = authMode === 'register';
+  document.getElementById('authTitle').textContent = isReg ? 'REGISTRER DEG' : 'LOGG INN';
+  document.getElementById('authBtn').textContent = isReg ? 'REGISTRER' : 'LOGG INN';
+  document.getElementById('authToggle').textContent = isReg ? 'Har konto? Logg inn' : 'Har ikke konto? Registrer deg';
+  document.getElementById('authConfirmWrap').style.display = isReg ? 'block' : 'none';
+  document.getElementById('authForgot').style.display = isReg ? 'none' : 'block';
+  document.getElementById('authError').style.display = 'none';
+}
+
+async function authLogin() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const confirm = document.getElementById('authConfirm').value;
+  const errEl = document.getElementById('authError');
+  const loadEl = document.getElementById('authLoading');
+
+  if (!email || !password) { showAuthError('Fyll inn e-post og passord'); return; }
+
+  if (authMode === 'register') {
+    if (password !== confirm) { showAuthError('Passordene matcher ikke'); return; }
+    if (password.length < 6) { showAuthError('Passordet må være minst 6 tegn'); return; }
   }
+
+  loadEl.style.display = 'block';
+  errEl.style.display = 'none';
+
+  try {
+    let result;
+    if (authMode === 'register') {
+      result = await sb.auth.signUp({email, password});
+      if (result.error) throw result.error;
+      if (result.data.user && !result.data.session) {
+        showAuthError('Sjekk e-posten din for bekreftelseslenke!');
+        loadEl.style.display = 'none';
+        return;
+      }
+    } else {
+      result = await sb.auth.signInWithPassword({email, password});
+      if (result.error) throw result.error;
+    }
+    currentUser = result.data.user;
+    onAuthSuccess();
+  } catch(e) {
+    showAuthError(translateAuthError(e.message));
+  }
+  loadEl.style.display = 'none';
 }
 
-// Auto-unlock if already authenticated this session
-if (sessionStorage.getItem('go_auth') === '1') {
-  document.getElementById('passwordScreen').style.display = 'none';
+async function authResetPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { showAuthError('Skriv inn e-posten din først'); return; }
+  const {error} = await sb.auth.resetPasswordForEmail(email);
+  if (error) showAuthError(error.message);
+  else showAuthError('Reset-lenke sendt til ' + email);
 }
+
+function showAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.color = msg.includes('sendt') ? '#4ab84a' : '#e05050';
+}
+
+function translateAuthError(msg) {
+  if (msg.includes('Invalid login')) return 'Feil e-post eller passord';
+  if (msg.includes('Email not confirmed')) return 'Bekreft e-posten din først';
+  if (msg.includes('User already registered')) return 'E-posten er allerede registrert';
+  if (msg.includes('Password should be')) return 'Passordet må være minst 6 tegn';
+  return msg;
+}
+
+function onAuthSuccess() {
+  document.getElementById('authScreen').style.display = 'none';
+  // Show user email in topnav
+  const userEl = document.getElementById('userDisplay');
+  if (userEl) userEl.textContent = currentUser.email;
+  // Load campaigns from Supabase
+  loadCampaignsFromSupabase();
+}
+
+// Check if already logged in
+sb.auth.getSession().then(({data}) => {
+  if (data.session) {
+    currentUser = data.session.user;
+    onAuthSuccess();
+  }
+});
+
+// Listen for auth changes
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    document.getElementById('authScreen').style.display = 'flex';
+  }
+});
+
 document.getElementById('pwYear').textContent = new Date().getFullYear();
 </script>
 <canvas id="particles"></canvas>
@@ -562,11 +660,12 @@ document.getElementById('pwYear').textContent = new Date().getFullYear();
     <span id="sceneIndicator" style="font-family:'Cinzel',serif;font-size:10px;color:#5a3e1b;letter-spacing:1px;padding:0 8px"></span>
     <div id="devTools" style="display:flex;gap:6px;margin-left:auto;align-items:center">
       <span id="saveIndicator" style="font-family:monospace;font-size:10px;color:#4ab84a;opacity:0;transition:opacity .4s;white-space:nowrap"></span>
+      <span id="userDisplay" style="font-family:'Cinzel',serif;font-size:9px;color:#5a3e1b;letter-spacing:1px;white-space:nowrap"></span>
       <button class="io-btn" onclick="openCampaignManager()" style="background:rgba(150,100,200,.2);color:#c080ff;border-color:#7a40aa">📁 KAMPANJER</button>
       <button class="io-btn io-export" onclick="exportJSON()">EKSPORTER JSON</button>
       <button class="io-btn" onclick="exportZip()" style="background:rgba(42,80,122,.2);color:#80c0ff;border-color:#2a507a">📦 EKSPORTER ZIP</button>
       <button class="io-btn io-import" onclick="document.getElementById('importFile').click()">IMPORTER</button>
-      <button class="io-btn" onclick="clearSave()" style="background:rgba(58,14,14,.4);color:#e05050;border-color:#7a2020">NULLSTILL LAGRING</button>
+      <button class="io-btn" onclick="authSignOut()" style="background:rgba(58,14,14,.4);color:#e05050;border-color:#7a2020">LOGG UT</button>
     </div>
     <button class="nav-btn" id="btnDevMode" onclick="toggleDevMode()" style="border-color:#5a3a8a;color:#c060ff;font-size:9px;margin-left:6px">🎮 SPILLMODUS</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
@@ -2313,8 +2412,103 @@ function handleImport(e) {
 }
 
 // ===== AUTOSAVE =====
-const CAMPAIGNS_INDEX_KEY = 'gameOver_campaigns'; // list of {id, name, updated}
-const ACTIVE_KEY = 'gameOver_activeCampaign';   // currently active campaign id
+// ===== SUPABASE CAMPAIGN STORAGE =====
+// Falls back to localStorage if not logged in
+
+async function authSignOut() {
+  await sb.auth.signOut();
+  notify('Logget ut!');
+}
+
+async function loadCampaignsFromSupabase() {
+  if (!currentUser) return;
+  try {
+    const {data, error} = await sb
+      .from('campaigns')
+      .select('id, name, updated_at')
+      .eq('user_id', currentUser.id)
+      .order('updated_at', {ascending: false});
+    if (error) throw error;
+    // Sync to localStorage index for offline use
+    if (data && data.length > 0) {
+      const index = data.map(c => ({id: c.id, name: c.name, updated: new Date(c.updated_at).getTime()}));
+      saveCampaignIndex(index);
+      // Load most recent campaign
+      const activeId = getActiveCampaignId() || data[0].id;
+      await loadCampaignFromSupabase(activeId);
+    }
+  } catch(e) {
+    console.log('Supabase load failed, using localStorage:', e.message);
+    autoloadFromLocal();
+  }
+  renderSceneList();
+  renderEditPanel();
+  updateSidebar();
+}
+
+async function loadCampaignFromSupabase(id) {
+  if (!currentUser) return;
+  try {
+    const {data, error} = await sb
+      .from('campaigns')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', currentUser.id)
+      .single();
+    if (error) throw error;
+    campaign = data.content;
+    campaign.name = data.name;
+    if (!campaign.sceneOrder) campaign.sceneOrder = [];
+    getOrder();
+    setActiveCampaignId(id);
+    ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints||2;
+    // Cache locally
+    localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
+    updateSidebar();
+    notify('💾 ' + (data.name||'Kampanje') + ' lastet!', 2000);
+  } catch(e) {
+    console.log('Could not load from Supabase:', e.message);
+    // Try local cache
+    const local = localStorage.getItem('gameOver_camp_' + id);
+    if (local) { campaign = JSON.parse(local); getOrder(); updateSidebar(); }
+  }
+}
+
+async function saveCampaignToSupabase() {
+  if (!currentUser) { autosaveLocal(); return; }
+  const id = getActiveCampaignId();
+  if (!id) { autosaveLocal(); return; }
+  try {
+    const {error} = await sb
+      .from('campaigns')
+      .upsert({
+        id,
+        user_id: currentUser.id,
+        name: campaign.name || 'Uten navn',
+        content: campaign,
+        updated_at: new Date().toISOString()
+      }, {onConflict: 'id'});
+    if (error) throw error;
+    // Also cache locally
+    localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
+    const el = document.getElementById('saveIndicator');
+    if (el) { el.textContent = '💾 Lagret ' + new Date().toLocaleTimeString('no'); el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2500); }
+  } catch(e) {
+    console.log('Supabase save failed, saving locally:', e.message);
+    autosaveLocal();
+  }
+}
+
+// Debounced autosave — waits 1.5s after last change before saving
+let saveTimer = null;
+function autosave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveCampaignToSupabase(), 1500);
+}
+
+// Local fallback
+const CAMPAIGNS_INDEX_KEY = 'gameOver_campaigns';
+const ACTIVE_KEY = 'gameOver_activeCampaign';
 
 function getCampaignIndex() {
   try { return JSON.parse(localStorage.getItem(CAMPAIGNS_INDEX_KEY)) || []; } catch { return []; }
@@ -2329,30 +2523,17 @@ function setActiveCampaignId(id) {
   try { localStorage.setItem(ACTIVE_KEY, id); } catch(e) {}
 }
 
-function autosave() {
+function autosaveLocal() {
   try {
-    let id = getActiveCampaignId();
-    if (!id) {
-      // First time — create default campaign
-      id = 'camp_' + Date.now();
-      setActiveCampaignId(id);
-      const index = getCampaignIndex();
-      index.unshift({id, name: campaign.name || 'Min kampanje', updated: Date.now()});
-      saveCampaignIndex(index);
-    } else {
-      // Update timestamp in index
-      const index = getCampaignIndex();
-      const entry = index.find(c => c.id === id);
-      if (entry) { entry.updated = Date.now(); entry.name = campaign.name || entry.name; }
-      saveCampaignIndex(index);
-    }
+    const id = getActiveCampaignId();
+    if (!id) return;
     localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
     const el = document.getElementById('saveIndicator');
-    if (el) { el.textContent = '💾 Lagret ' + new Date().toLocaleTimeString('no'); el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2500); }
+    if (el) { el.textContent = '💾 Lokalt ' + new Date().toLocaleTimeString('no'); el.style.opacity='1'; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2500); }
   } catch(e) {}
 }
 
-function autoload() {
+function autoloadFromLocal() {
   try {
     const id = getActiveCampaignId();
     if (id) {
@@ -2363,35 +2544,30 @@ function autoload() {
         getOrder();
         ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints||2;
         updateSidebar();
-        notify('💾 ' + (campaign.name||'Kampanje') + ' lastet inn!', 3000);
         return true;
       }
     }
-    // No active campaign — check if any exist
     const index = getCampaignIndex();
-    if (index.length > 0) {
-      setActiveCampaignId(index[0].id);
-      return autoload();
-    }
+    if (index.length > 0) { setActiveCampaignId(index[0].id); return autoloadFromLocal(); }
   } catch(e) {}
   return false;
 }
 
+function autoload() { return autoloadFromLocal(); }
+
 function clearSave() {
-  if (!confirm('Slette DENNE kampanjen fra nettleseren?')) return;
+  if (!confirm('Slette DENNE kampanjen?')) return;
   const id = getActiveCampaignId();
   if (id) {
+    if (currentUser) sb.from('campaigns').delete().eq('id', id).eq('user_id', currentUser.id);
     localStorage.removeItem('gameOver_camp_' + id);
     const index = getCampaignIndex().filter(c => c.id !== id);
     saveCampaignIndex(index);
     localStorage.removeItem(ACTIVE_KEY);
   }
   notify('Kampanje slettet.');
-  // Load another if exists
-  if (!autoload()) {
-    campaign = {startScene:null,partyMaxHp:100,partyPotions:3,partyHints:2,potionHeal:20,transitionSoundUrl:'',deathScene:'',sceneOrder:[],scenes:{},name:'Ny kampanje'};
-    renderSceneList(); renderEditPanel();
-  }
+  campaign = {name:'Ny kampanje',startScene:null,partyMaxHp:100,partyPotions:3,partyHints:2,potionHeal:20,transitionSoundUrl:'',deathScene:'',sceneOrder:[],scenes:{}};
+  renderSceneList(); renderEditPanel();
 }
 
 // ===== CAMPAIGN MANAGER =====
@@ -2442,9 +2618,7 @@ function renderCampaignList() {
 function createNewCampaign() {
   const nameInput = document.getElementById('newCampaignName');
   const name = nameInput.value.trim() || 'Ny kampanje';
-  // Save current first
-  autosave();
-  // Create new blank campaign
+  autosave(); // save current first
   const id = 'camp_' + Date.now();
   campaign = {
     name, startScene:null, partyMaxHp:100, partyPotions:3, partyHints:2,
@@ -2454,19 +2628,23 @@ function createNewCampaign() {
   const index = getCampaignIndex();
   index.unshift({id, name, updated: Date.now()});
   saveCampaignIndex(index);
-  localStorage.setItem('gameOver_camp_' + id, JSON.stringify(campaign));
   ps.partyHp=100; ps.potions=3; ps.hints=2;
   editSel=null; renderSceneList(); renderEditPanel(); updateSidebar();
+  autosave();
   nameInput.value = '';
   renderCampaignList();
-  notify('✓ Ny kampanje opprettet: ' + name);
+  notify('✓ Ny kampanje: ' + name);
 }
 
-function switchCampaign(id) {
-  autosave(); // save current first
+async function switchCampaign(id) {
+  autosave();
   setActiveCampaignId(id);
-  autoload();
-  renderSceneList(); renderEditPanel();
+  if (currentUser) {
+    await loadCampaignFromSupabase(id);
+  } else {
+    autoloadFromLocal();
+  }
+  editSel=null; renderSceneList(); renderEditPanel();
   closeCampaignManager();
 }
 
@@ -2574,7 +2752,7 @@ document.querySelectorAll('.copyrightYearInline').forEach(el => el.textContent =
 })();
 
 ps.partyHp=campaign.partyMaxHp; ps.potions=campaign.partyPotions; ps.hints=campaign.partyHints;
-autoload();
+// autoload happens via Supabase onAuthSuccess callback
 updateSidebar();
 </script>
 </body>
